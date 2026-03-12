@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyFirebaseToken } = require('../middleware/firebaseAuth');
+const { protect } = require('../middleware/auth.middleware');
 const {
     createExchangeRequest,
     getSentRequests,
@@ -13,8 +13,8 @@ const {
     markPayment
 } = require('../controllers/exchange.controller');
 
-// All routes require Firebase authentication
-router.use(verifyFirebaseToken);
+// All routes require authentication (Supports Hybrid Auth)
+router.use(protect);
 
 // Create a new exchange request
 router.post('/create', createExchangeRequest);

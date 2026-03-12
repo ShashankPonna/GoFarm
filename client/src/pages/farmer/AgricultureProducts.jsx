@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import Papa from 'papaparse';
+import Papa from '../../libs/papaparse.js';
 import { productsAPI, IMAGE_BASE_URL } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../context/SocketContext';

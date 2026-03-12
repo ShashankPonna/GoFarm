@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Papa from 'papaparse';
+import Papa from '../../libs/papaparse.js';
 import { productsAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../context/SocketContext';

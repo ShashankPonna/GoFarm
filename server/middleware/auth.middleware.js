@@ -1,10 +1,10 @@
 const admin = require('firebase-admin');
 const User = require('../models/User.model');
+const jwt = require('jsonwebtoken');
 
 /**
- * Protect routes — verify Firebase ID token and attach user to request.
- * Replaces old JWT-based protect middleware.
- * Sets req.user (full Mongoose document) and req.firebaseUID.
+ * Protect routes — verify Firebase ID token OR Custom JWT and attach user to request.
+ * Sets req.user (full Mongoose document).
  */
 exports.protect = async (req, res, next) => {
   try {
@@ -15,38 +15,54 @@ exports.protect = async (req, res, next) => {
     }
 
     if (!token) {
+      console.log('🔒 [AuthMiddleware] No token provided');
       return res.status(401).json({
         success: false,
         message: 'Not authorized — no token provided'
       });
     }
 
+    // --- TRY FIREBASE VERIFICATION FIRST ---
     try {
-      // Verify Firebase ID token
-      const decodedToken = await admin.auth().verifyIdToken(token);
-      req.firebaseUID = decodedToken.uid;
-      req.firebasePhone = decodedToken.phone_number || null;
-
-      // Lookup user in MongoDB by firebaseUID
-      const user = await User.findOne({ firebaseUID: decodedToken.uid });
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'User not found in database'
-        });
+      const decodedFirebase = await admin.auth().verifyIdToken(token);
+      const user = await User.findOne({ firebaseUID: decodedFirebase.uid });
+      
+      if (user) {
+        console.log('🔒 [AuthMiddleware] Firebase Token Verified for:', user.customID);
+        req.firebaseUID = decodedFirebase.uid;
+        req.user = user;
+        return next();
       }
-
-      // Attach full user document to request (needed by controllers that use req.user._id, req.user.role, etc.)
-      req.user = user;
-      next();
-    } catch (error) {
-      console.log('❌ Firebase token verification failed:', error.message);
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized — invalid token'
-      });
+    } catch (firebaseError) {
+      // If Firebase fails, we proceed to check if it's a custom JWT
+      // console.log('Firebase verification failed, trying JWT...');
     }
+
+    // --- TRY CUSTOM JWT VERIFICATION ---
+    try {
+      console.log('🔒 [AuthMiddleware] Attempting Custom JWT verification...');
+      const decodedJWT = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('🔒 [AuthMiddleware] JWT Decoded Successfully:', JSON.stringify(decodedJWT));
+      
+      const user = await User.findById(decodedJWT.id);
+
+      if (user) {
+        console.log('🔒 [AuthMiddleware] JWT Verified for:', user.customID);
+        req.user = user;
+        return next();
+      } else {
+        console.log('🔒 [AuthMiddleware] User not found for ID:', decodedJWT.id);
+      }
+    } catch (jwtError) {
+      console.log('🔒 [AuthMiddleware] JWT Verification Failed:', jwtError.message);
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized — invalid or expired token'
+    });
   } catch (error) {
+    console.error('🔒 [AuthMiddleware] Unknown Error:', error);
     next(error);
   }
 };

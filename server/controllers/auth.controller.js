@@ -1,4 +1,22 @@
 const User = require('../models/User.model');
+const jwt = require('jsonwebtoken');
+const twilio = require('twilio');
+
+// Initialize Twilio client
+const client = (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
+  : null;
+
+const VERIFY_SERVICE_SID = process.env.TWILIO_VERIFY_SERVICE_SID;
+
+/**
+ * Generate JWT for the user
+ */
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  });
+};
 
 /**
  * Generate a unique customID: FARM-XXXX or RET-XXXX
@@ -16,6 +34,139 @@ const generateCustomID = async (role) => {
   }
 
   return customID;
+};
+
+/**
+ * POST /api/auth/send-otp
+ * Body: { phone }
+ */
+exports.sendOTP = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'Phone number is required' });
+    }
+
+    // Verify if user exists first (for Login flow)
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this phone number. Please register first.'
+      });
+    }
+
+    // Mock Mode Logic
+    if (!client || !VERIFY_SERVICE_SID) {
+      console.log(`[MOCK MODE] OTP sent to ${phone}: 123456`);
+      return res.status(200).json({
+        success: true,
+        message: 'OTP sent successfully (Mock Mode)',
+        mock: true,
+        name: user.name // Return name for personalized welcome
+      });
+    }
+
+    const verification = await client.verify.v2
+      .services(VERIFY_SERVICE_SID)
+      .verifications.create({ to: `+91${phone}`, channel: 'sms' });
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully',
+      status: verification.status,
+      name: user.name // Return name for personalized welcome
+    });
+  } catch (error) {
+    console.error('❌ Twilio Send OTP Error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP. Please try again later.'
+    });
+  }
+};
+
+/**
+ * POST /api/auth/verify-otp
+ * Body: { phone, otp, userData (optional for registration) }
+ */
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { phone, otp, userData } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ success: false, message: 'Phone and OTP are required' });
+    }
+
+    let isVerified = false;
+
+    // Mock Mode Logic
+    if (!client || !VERIFY_SERVICE_SID) {
+      if (otp === '123456') isVerified = true;
+    } else {
+      const verificationCheck = await client.verify.v2
+        .services(VERIFY_SERVICE_SID)
+        .verificationChecks.create({ to: `+91${phone}`, code: otp });
+      
+      if (verificationCheck.status === 'approved') isVerified = true;
+    }
+
+    if (!isVerified) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' });
+    }
+
+    // OTP Approved -> Find or Create User
+    let user = await User.findOne({ phone });
+
+    if (!user && userData) {
+      // Registration flow
+      const { name, role, district, taluka, village, pincode } = userData;
+      
+      // Basic validation
+      if (!name || !role || !district || !taluka || !village || !pincode) {
+        return res.status(400).json({ success: false, message: 'Incomplete registration data' });
+      }
+
+      const customID = await generateCustomID(role);
+      
+      user = new User({
+        firebaseUID: `twilio_${phone}`, // Place-holder for consistency
+        name,
+        phone,
+        role,
+        customID,
+        location: { district, taluka, village, pincode }
+      });
+
+      await user.save();
+      console.log(`✅ New user registered via Twilio: ${customID}`);
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found. Please register first.',
+        isNotRegistered: true
+      });
+    }
+
+    // Generate custom JWT
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      user,
+      token,
+      message: 'Authentication successful'
+    });
+  } catch (error) {
+    console.error('❌ Twilio Verify OTP Error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Verification failed. Please try again.'
+    });
+  }
 };
 
 /**
@@ -177,11 +328,15 @@ exports.verifyLogin = async (req, res) => {
 
 /**
  * GET /api/auth/profile
- * Protected by verifyFirebaseToken
+ * Protected by verifyFirebaseToken OR protect (Hybrid)
  */
 exports.getUserProfile = async (req, res) => {
   try {
-    const user = await User.findOne({ firebaseUID: req.firebaseUID });
+    // req.user is attached by authMiddleware.protect
+    // req.firebaseUID is attached by firebaseAuth.verifyFirebaseToken
+    const query = req.user ? { _id: req.user._id } : { firebaseUID: req.firebaseUID };
+    
+    const user = await User.findOne(query);
 
     if (!user) {
       return res.status(404).json({
@@ -199,3 +354,4 @@ exports.getUserProfile = async (req, res) => {
     });
   }
 };
+

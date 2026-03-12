@@ -37,10 +37,10 @@ exports.createExchangeRequest = async (req, res) => {
     try {
         const { receiverCustomID, offeredItem, offeredQuantity, requestedItem, requestedQuantity, paymentMethod } = req.body;
 
-        // Get requester from Firebase UID
-        const requester = await User.findOne({ firebaseUID: req.firebaseUID });
+        // Get requester from protect middleware
+        const requester = req.user;
         if (!requester) {
-            return res.status(404).json({ success: false, message: 'Requester not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized — User not found' });
         }
 
         // Validate required fields (receiverCustomID is optional for broadcast)
@@ -175,8 +175,8 @@ exports.createExchangeRequest = async (req, res) => {
  */
 exports.getSentRequests = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchanges = await ExchangeRequest.find({ requesterCustomID: user.customID })
             .sort({ createdAt: -1 });
@@ -196,8 +196,8 @@ exports.getSentRequests = async (req, res) => {
  */
 exports.getOpenExchanges = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         // Get all open pending exchanges, excluding your own
         const exchanges = await ExchangeRequest.find({
@@ -221,8 +221,8 @@ exports.getOpenExchanges = async (req, res) => {
  */
 exports.getReceivedRequests = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchanges = await ExchangeRequest.find({ receiverCustomID: user.customID })
             .sort({ createdAt: -1 });
@@ -243,8 +243,8 @@ exports.getReceivedRequests = async (req, res) => {
  */
 exports.acceptExchange = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchange = await ExchangeRequest.findOne({ exchangeID: req.params.id });
         if (!exchange) return res.status(404).json({ success: false, message: 'Exchange not found' });
@@ -302,8 +302,8 @@ exports.acceptExchange = async (req, res) => {
  */
 exports.rejectExchange = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchange = await ExchangeRequest.findOne({ exchangeID: req.params.id });
         if (!exchange) return res.status(404).json({ success: false, message: 'Exchange not found' });
@@ -350,8 +350,8 @@ exports.rejectExchange = async (req, res) => {
  */
 exports.completeExchange = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchange = await ExchangeRequest.findOne({ exchangeID: req.params.id });
         if (!exchange) return res.status(404).json({ success: false, message: 'Exchange not found' });
@@ -429,8 +429,8 @@ exports.completeExchange = async (req, res) => {
  */
 exports.cancelExchange = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchange = await ExchangeRequest.findOne({ exchangeID: req.params.id });
         if (!exchange) return res.status(404).json({ success: false, message: 'Exchange not found' });
@@ -470,8 +470,8 @@ exports.cancelExchange = async (req, res) => {
  */
 exports.markPayment = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const exchange = await ExchangeRequest.findOne({ exchangeID: req.params.id });
         if (!exchange) return res.status(404).json({ success: false, message: 'Exchange not found' });

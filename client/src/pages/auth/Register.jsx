@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '../../config/firebaseConfig';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import locationData from '../../data/locationData.json';
 import api from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const location = useLocation();
@@ -25,61 +24,24 @@ const Register = () => {
   // OTP flow state
   const [step, setStep] = useState(1); // 1=form, 2=otp, 3=success
   const [otp, setOtp] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [generatedID, setGeneratedID] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
-  // Location dropdown state
+  // Timer logic for Resend OTP
+  useEffect(() => {
+    let timer;
+    if (resendTimer > 0) {
+      timer = setInterval(() => setResendTimer(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendTimer]);
+
+  // District change → populate talukas
   const [talukas, setTalukas] = useState([]);
   const [villages, setVillages] = useState([]);
 
-  // Initialize reCAPTCHA ONCE on mount — with proper cleanup
-  useEffect(() => {
-    // Create container outside React DOM
-    let container = document.getElementById('recaptcha-container-reg');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'recaptcha-container-reg';
-      document.body.appendChild(container);
-    }
-
-    // Clear any existing verifier to avoid stale DOM refs
-    if (window.recaptchaVerifierReg) {
-      try {
-        window.recaptchaVerifierReg.clear();
-      } catch (e) {
-        // ignore clear errors
-      }
-      window.recaptchaVerifierReg = null;
-    }
-
-    try {
-      window.recaptchaVerifierReg = new RecaptchaVerifier(auth, 'recaptcha-container-reg', {
-        size: 'invisible',
-        callback: () => console.log('[Register] reCAPTCHA solved'),
-        'expired-callback': () => {
-          console.log('[Register] reCAPTCHA expired');
-        }
-      });
-    } catch (e) {
-      console.warn('[Register] reCAPTCHA init error (safe to ignore in dev):', e.message);
-    }
-
-    return () => {
-      // Cleanup on unmount
-      if (window.recaptchaVerifierReg) {
-        try {
-          window.recaptchaVerifierReg.clear();
-        } catch (e) {
-          // ignore
-        }
-        window.recaptchaVerifierReg = null;
-      }
-    };
-  }, []);
-
-  // District change → populate talukas
   const handleDistrictChange = (e) => {
     const district = e.target.value;
     setFormData(prev => ({ ...prev, district, taluka: '', village: '' }));
@@ -88,7 +50,6 @@ const Register = () => {
     setVillages([]);
   };
 
-  // Taluka change → populate villages
   const handleTalukaChange = (e) => {
     const taluka = e.target.value;
     setFormData(prev => ({ ...prev, taluka, village: '' }));
@@ -98,7 +59,7 @@ const Register = () => {
 
   // STEP 1: Send OTP
   const handleSendOTP = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
 
     const { name, phone, role, district, taluka, village, pincode } = formData;
@@ -114,21 +75,13 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const phoneNumber = `+91${phone}`;
-      const result = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifierReg);
-      setConfirmationResult(result);
+      await api.post('/auth/send-otp', { phone });
+      toast.success('OTP sent successfully!');
       setStep(2);
+      setResendTimer(60);
     } catch (err) {
-      console.error('OTP send error:', err.code, err.message, err);
-      if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please wait a few minutes.');
-      } else if (err.code === 'auth/invalid-phone-number') {
-        setError('Invalid phone number format.');
-      } else if (err.code === 'auth/quota-exceeded') {
-        setError('SMS quota exceeded. Try again later.');
-      } else {
-        setError(`Failed to send OTP: ${err.code || err.message || 'Unknown error'}`);
-      }
+      console.error('OTP send error:', err);
+      setError(err.response?.data?.message || 'Failed to send OTP. Try again.');
     } finally {
       setLoading(false);
     }
@@ -146,44 +99,33 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // Verify OTP with Firebase
-      const result = await confirmationResult.confirm(otp);
-      const idToken = await result.user.getIdToken();
-
-      // Send registration data to backend with Firebase token
-      const response = await api.post('/auth/register', {
-        name: formData.name,
+      // Send OTP and registration data to backend in one step
+      const response = await api.post('/auth/verify-otp', {
         phone: formData.phone,
-        role: formData.role,
-        district: formData.district,
-        taluka: formData.taluka,
-        village: formData.village,
-        pincode: formData.pincode
-      }, {
-        headers: { Authorization: `Bearer ${idToken}` }
+        otp,
+        userData: {
+          name: formData.name,
+          role: formData.role,
+          district: formData.district,
+          taluka: formData.taluka,
+          village: formData.village,
+          pincode: formData.pincode
+        }
       });
 
-      const user = response.data.user;
+      const { user } = response.data;
       setGeneratedID(user.customID);
+      toast.success('Registration successful!');
       setStep(3);
     } catch (err) {
-      console.error('OTP verify / register error:', err.code, err.message, err);
-      if (err.code === 'auth/invalid-verification-code') {
-        setError('Invalid OTP. Please check and try again.');
-      } else if (err.code === 'auth/code-expired') {
-        setError('OTP expired. Go back and send a new OTP.');
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError(`Verification failed: ${err.code || err.message || 'Unknown error'}`);
-      }
+      console.error('OTP verify / register error:', err);
+      setError(err.response?.data?.message || 'Verification failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   // --- RENDER ---
-
   const inputClass = 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition-colors bg-white';
   const btnClass = 'w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed';
 
@@ -309,7 +251,7 @@ const Register = () => {
             </div>
 
             <button type="submit" className={btnClass} disabled={loading}>
-              {loading ? '⏳ Sending OTP...' : '📱 Send OTP'}
+              {loading ? '⏳ Processing...' : '📱 Send OTP'}
             </button>
           </form>
         )}
@@ -337,6 +279,22 @@ const Register = () => {
             <button type="submit" className={btnClass} disabled={loading}>
               {loading ? '⏳ Verifying...' : '✅ Verify & Register'}
             </button>
+
+            <div className="text-center">
+              {resendTimer > 0 ? (
+                <p className="text-xs text-gray-400">Resend OTP in {resendTimer}s</p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  className="text-xs text-green-600 hover:underline font-semibold"
+                  disabled={loading}
+                >
+                  Didn't receive code? Resend
+                </button>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={() => { setStep(1); setOtp(''); setError(''); }}
@@ -383,3 +341,4 @@ const Register = () => {
 };
 
 export default Register;
+

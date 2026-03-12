@@ -14,8 +14,8 @@ const User = require('../models/User.model');
 exports.createDispute = async (req, res) => {
     try {
         const { exchangeID, reason, description } = req.body;
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         // Validate required fields
         if (!exchangeID || !reason || !description) {
@@ -124,8 +124,8 @@ exports.createDispute = async (req, res) => {
  */
 exports.getMyDisputes = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const disputes = await Dispute.find({
             $or: [
@@ -149,7 +149,7 @@ exports.getMyDisputes = async (req, res) => {
  */
 exports.getAllDisputes = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user || user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Admin access required' });
         }
@@ -185,7 +185,7 @@ exports.getAllDisputes = async (req, res) => {
  */
 exports.reviewDispute = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user || user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Admin access required' });
         }
@@ -227,7 +227,7 @@ exports.resolveDispute = async (req, res) => {
     try {
         const { adminDecision, trustPenalty } = req.body;
 
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user || user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Admin access required' });
         }
@@ -308,7 +308,7 @@ exports.rejectDispute = async (req, res) => {
     try {
         const { adminDecision } = req.body;
 
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user || user.role !== 'admin') {
             return res.status(403).json({ success: false, message: 'Admin access required' });
         }

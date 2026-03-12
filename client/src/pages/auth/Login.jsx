@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '../../config/firebaseConfig';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,67 +12,46 @@ const Login = () => {
   // Pre-fill customID if coming from registration
   const idFromState = location.state?.customID || '';
 
-  const [step, setStep] = useState(1); // 1=enter ID, 2=enter OTP
-  const [customID, setCustomID] = useState(idFromState);
-  const [, setPhone] = useState('');
-  const [maskedPhone, setMaskedPhone] = useState('');
+  const [step, setStep] = useState(1); // 1=enter Phone, 2=enter OTP
+  const [phone, setPhone] = useState('');
   const [userName, setUserName] = useState('');
   const [otp, setOtp] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
-  // Initialize reCAPTCHA ONCE on mount — never clear or recreate
+  // Timer logic for Resend OTP
   useEffect(() => {
-    let container = document.getElementById('recaptcha-container-login');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'recaptcha-container-login';
-      document.body.appendChild(container);
+    let timer;
+    if (resendTimer > 0) {
+      timer = setInterval(() => setResendTimer(prev => prev - 1), 1000);
     }
+    return () => clearInterval(timer);
+  }, [resendTimer]);
 
-    if (!window.recaptchaVerifierLogin) {
-      window.recaptchaVerifierLogin = new RecaptchaVerifier(auth, 'recaptcha-container-login', {
-        size: 'invisible',
-        callback: () => console.log('[Login] reCAPTCHA solved'),
-        'expired-callback': () => {
-          console.log('[Login] reCAPTCHA expired');
-        }
-      });
-    }
-  }, []);
-
-  // STEP 1: Lookup user by customID and send OTP
+  // STEP 1: Send OTP to phone number
   const handleGetOTP = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
 
-    if (!customID.trim()) {
-      setError('Please enter your ID');
+    if (!phone || phone.length !== 10) {
+      setError('Please enter a valid 10-digit phone number');
       return;
     }
 
     setLoading(true);
     try {
-      // Lookup phone number from backend
-      const response = await api.post('/auth/login', { customID: customID.trim().toUpperCase() });
-      const { phone: userPhone, maskedPhone: masked, name } = response.data;
-
-      setPhone(userPhone);
-      setMaskedPhone(masked);
-      setUserName(name);
-
-      // Send OTP via Firebase
-      const phoneNumber = userPhone.startsWith('+') ? userPhone : `+91${userPhone}`;
-      const result = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifierLogin);
-      setConfirmationResult(result);
+      // Send OTP via Twilio Backend
+      const response = await api.post('/auth/send-otp', { phone: phone.trim() });
+      
+      setUserName(response.data.name || '');
+      toast.success('OTP sent successfully!');
       setStep(2);
+      setResendTimer(60); // 60 seconds cooldown
     } catch (err) {
-      console.error('Login lookup error:', err);
+      console.error('Login error:', err);
       if (err.response?.status === 404) {
-        setError('No user found with this ID. Please check and try again.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please wait a few minutes.');
+        setError('No account found with this phone number. Please register.');
       } else {
         setError(err.response?.data?.message || 'Failed to send OTP. Try again.');
       }
@@ -94,21 +72,19 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // Verify OTP with Firebase
-      const result = await confirmationResult.confirm(otp);
-      const idToken = await result.user.getIdToken();
-
-      // Verify login with backend
-      const response = await api.post('/auth/verify-login', {}, {
-        headers: { Authorization: `Bearer ${idToken}` }
+      // Verify OTP with backend
+      const response = await api.post('/auth/verify-otp', {
+        phone,
+        otp
       });
 
-      const user = response.data.user;
+      const { user, token } = response.data;
 
       // Store auth state
-      setAuth(user, idToken);
+      setAuth(user, token);
+      toast.success(`Welcome back, ${user.name}!`);
 
-      // Redirect to dashboard based on role
+      // Redirect based on role
       if (user.role === 'farmer') {
         navigate('/farmer/dashboard');
       } else if (user.role === 'retailer') {
@@ -118,11 +94,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error('OTP verify error:', err);
-      if (err.code === 'auth/invalid-verification-code') {
-        setError('Invalid OTP. Please check and try again.');
-      } else {
-        setError(err.response?.data?.message || 'Login failed. Please try again.');
-      }
+      setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -139,7 +111,7 @@ const Login = () => {
           🔐 Login to GOFaRm
         </h2>
         <p className="text-gray-500 text-sm text-center mb-6">
-          {step === 1 ? 'Enter your Farmer / Retailer ID' : `OTP sent to ${maskedPhone}`}
+          {step === 1 ? 'Enter your registered phone number' : `OTP sent to ${phone}`}
         </p>
 
         {error && (
@@ -148,23 +120,28 @@ const Login = () => {
           </div>
         )}
 
-        {/* STEP 1: Enter Custom ID */}
+        {/* STEP 1: Enter Phone Number */}
         {step === 1 && (
           <form onSubmit={handleGetOTP} className="space-y-4">
             <div>
-              <label className="block text-gray-700 font-semibold mb-1 text-sm">Your ID</label>
-              <input
-                type="text"
-                value={customID}
-                onChange={(e) => setCustomID(e.target.value.toUpperCase())}
-                className={`${inputClass} text-center text-lg font-mono tracking-wider`}
-                placeholder="FARM-XXXX or RET-XXXX"
-                autoFocus
-                required
-              />
+              <label className="block text-gray-700 font-semibold mb-1 text-sm">Phone Number</label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">
+                  +91
+                </span>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  className={`${inputClass} rounded-l-none text-center text-lg tracking-wider`}
+                  placeholder="9876543210"
+                  autoFocus
+                  required
+                />
+              </div>
             </div>
             <button type="submit" className={btnClass} disabled={loading}>
-              {loading ? '⏳ Sending OTP...' : '📱 Get OTP'}
+              {loading ? '⏳ Processing...' : '📱 Get OTP'}
             </button>
           </form>
         )}
@@ -174,7 +151,6 @@ const Login = () => {
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center mb-2">
               <p className="text-sm text-gray-600">Welcome back, <strong>{userName}</strong></p>
-              <p className="text-xs text-gray-500">ID: {customID}</p>
             </div>
             <div>
               <label className="block text-gray-700 font-semibold mb-1 text-sm">Enter OTP</label>
@@ -191,12 +167,28 @@ const Login = () => {
             <button type="submit" className={btnClass} disabled={loading}>
               {loading ? '⏳ Verifying...' : '✅ Verify & Login'}
             </button>
+            
+            <div className="text-center">
+              {resendTimer > 0 ? (
+                <p className="text-xs text-gray-400">Resend OTP in {resendTimer}s</p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleGetOTP}
+                  className="text-xs text-green-600 hover:underline font-semibold"
+                  disabled={loading}
+                >
+                  Didn't receive code? Resend
+                </button>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={() => { setStep(1); setOtp(''); setError(''); }}
               className="w-full text-gray-500 hover:text-gray-700 text-sm py-2"
             >
-              ← Change ID
+              ← Change Number
             </button>
           </form>
         )}
@@ -214,3 +206,4 @@ const Login = () => {
 };
 
 export default Login;
+

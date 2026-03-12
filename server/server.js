@@ -145,6 +145,8 @@ app.get('/api/health', (req, res) => {
 // 📦 API Routes
 // ------------------
 app.use('/api/auth', authRoutes);
+app.use('/api/auth-twilio', authRoutes); // Compatible with new frontend endpoint
+
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/crops', cropRoutes);

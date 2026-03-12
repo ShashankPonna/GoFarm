@@ -6,7 +6,7 @@ const {
   getDetectionDetail,
   deleteDetection
 } = require('../controllers/cottonDiseaseController');
-const { verifyFirebaseToken } = require('../middleware/firebaseAuth');
+const { protect } = require('../middleware/auth.middleware');
 const { uploadSingleImage, handleMulterError, validateImageUpload } = require('../middleware/uploadMiddleware');
 
 /**
@@ -17,6 +17,7 @@ const { uploadSingleImage, handleMulterError, validateImageUpload } = require('.
  */
 router.post(
   '/detect',
+  protect,
   uploadSingleImage,
   handleMulterError,
   validateImageUpload,
@@ -31,7 +32,7 @@ router.post(
  */
 router.get(
   '/history',
-  verifyFirebaseToken,
+  protect,
   getDetectionHistory
 );
 
@@ -43,7 +44,7 @@ router.get(
  */
 router.get(
   '/detection/:detectionId',
-  verifyFirebaseToken,
+  protect,
   getDetectionDetail
 );
 
@@ -55,7 +56,7 @@ router.get(
  */
 router.delete(
   '/detection/:detectionId',
-  verifyFirebaseToken,
+  protect,
   deleteDetection
 );
 

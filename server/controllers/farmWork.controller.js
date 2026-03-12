@@ -8,10 +8,10 @@ const Crop = require('../models/Crop.model');
  */
 exports.createWorkPost = async (req, res) => {
     try {
-        // Lookup user from Firebase UID
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        // Get user from protect middleware
+        const user = req.user;
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized — User not found' });
         }
 
         const {
@@ -77,9 +77,9 @@ exports.createWorkPost = async (req, res) => {
  */
 exports.getNearbyPosts = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
         const posts = await FarmWorkPost.find({
@@ -106,9 +106,9 @@ exports.getNearbyPosts = async (req, res) => {
  */
 exports.applyToPost = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
         const post = await FarmWorkPost.findById(req.params.postId);
@@ -177,9 +177,9 @@ exports.applyToPost = async (req, res) => {
  */
 exports.getMyPosts = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
         const posts = await FarmWorkPost.find({ postedBy: user._id })
@@ -204,9 +204,9 @@ exports.getMyPosts = async (req, res) => {
  */
 exports.deletePost = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
         const post = await FarmWorkPost.findById(req.params.postId);
@@ -233,9 +233,9 @@ exports.deletePost = async (req, res) => {
  */
 exports.closePost = async (req, res) => {
     try {
-        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        const user = req.user;
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
         const post = await FarmWorkPost.findById(req.params.postId);

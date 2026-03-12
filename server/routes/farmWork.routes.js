@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyFirebaseToken } = require('../middleware/firebaseAuth');
+const { protect } = require('../middleware/auth.middleware');
 const {
     createWorkPost,
     getNearbyPosts,
@@ -10,8 +10,8 @@ const {
     closePost
 } = require('../controllers/farmWork.controller');
 
-// All routes require Firebase authentication
-router.use(verifyFirebaseToken);
+// All routes require authentication (Supports Hybrid Auth)
+router.use(protect);
 
 // Create a new work post
 router.post('/create', createWorkPost);
