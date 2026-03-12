@@ -5,6 +5,7 @@ const {
     createExchangeRequest,
     getSentRequests,
     getReceivedRequests,
+    getOpenExchanges,
     acceptExchange,
     rejectExchange,
     completeExchange,
@@ -20,6 +21,9 @@ router.post('/create', createExchangeRequest);
 
 // Get exchanges I sent
 router.get('/sent', getSentRequests);
+
+// Get open/broadcast exchange offers (anyone can accept)
+router.get('/open', getOpenExchanges);
 
 // Get exchanges sent to me
 router.get('/received', getReceivedRequests);

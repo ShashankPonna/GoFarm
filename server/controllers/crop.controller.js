@@ -1,6 +1,5 @@
 const Crop = require('../models/Crop.model');
-const { getRecommendations, getSimpleRecommendation } = require('../utils/cropRecommendation');
-const { getEnhancedCropRecommendations, getCropSpecificAdvice, getSoilImprovementPlan } = require('../utils/groqCropRecommendation');
+const { getGroqRecommendations, getCropSpecificAdvice, getSoilImprovementPlan } = require('../utils/groqCropRecommendation');
 
 exports.createCrop = async (req, res) => {
   try {
@@ -100,11 +99,8 @@ exports.getRecommendations = async (req, res) => {
       });
     }
 
-    // Get recommendations
-    const recommendations = getRecommendations({ soil, weather });
-
-    // Get Groq AI enhanced analysis
-    const enhancedData = await getEnhancedCropRecommendations(recommendations, soil, weather);
+    // Get purely AI-driven recommendations in JSON format
+    const enhancedData = await getGroqRecommendations(soil, weather);
 
     res.json({
       status: 'success',

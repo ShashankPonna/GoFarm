@@ -1,6 +1,6 @@
 /**
  * Groq AI Service for Crop Recommendations
- * Enhances crop recommendations with detailed Groq AI analysis
+ * Generates crop recommendations completely via Groq AI
  */
 
 const axios = require('axios');
@@ -9,39 +9,20 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 /**
- * Get enhanced crop recommendations from Groq AI
- * @param {Array} recommendations - Top crop recommendations from algorithm
+ * Get crop recommendations purely from Groq AI
  * @param {Object} soil - Soil data
  * @param {Object} weather - Weather data
- * @returns {Promise} Enhanced recommendations with Groq AI insights - TOP CROP ONLY
+ * @returns {Promise} AI generated recommendations in JSON format
  */
-exports.getEnhancedCropRecommendations = async (recommendations, soil, weather) => {
+exports.getGroqRecommendations = async (soil, weather) => {
   try {
-    // Get only the top recommendation
-    const topCrop = recommendations && recommendations.length > 0 ? recommendations[0] : null;
-    
-    if (!topCrop) {
-      return {
-        status: 'error',
-        recommendations: [],
-        groqAnalysis: null,
-        message: 'No crop recommendations available'
-      };
-    }
-
     if (!GROQ_API_KEY) {
-      console.warn('Groq API key not configured. Returning base recommendation.');
-      return {
-        status: 'success',
-        recommendations: [topCrop],
-        groqAnalysis: null,
-        message: 'Base recommendation only (Groq AI not configured)'
-      };
+      throw new Error('Groq API key not configured');
     }
 
-    const prompt = `You are an expert agricultural scientist specializing in crop recommendations for Indian farmers.
+    const prompt = `You are an expert agricultural scientist specializing in crop recommendations.
 
-🌾 FARMER'S SOIL & WEATHER CONDITIONS:
+FARMER'S SOIL & WEATHER CONDITIONS:
 - Region: ${weather.region}
 - Temperature: ${weather.temp}°C
 - Humidity: ${weather.humidity}%
@@ -53,62 +34,44 @@ exports.getEnhancedCropRecommendations = async (recommendations, soil, weather) 
 - Potassium (K): ${soil.k} mg/kg
 - Organic Carbon: ${soil.organicCarbon}%
 
-🎯 AI ALGORITHM RECOMMENDS: ${topCrop.cropName} (Suitability Score: ${topCrop.suitabilityScore}/100)
+Based on these exact conditions, recommend the TOP 3 most suitable crops.
 
-Please provide a DETAILED, COMPREHENSIVE guide for growing ${topCrop.cropName} in these exact conditions. Structure your response in Hindi and English with these sections:
+You MUST respond strictly in valid JSON format. Do not use markdown blocks, do not include any other text. The output should be a single JSON object with two top-level keys:
+1. "recommendations": An array of exactly 3 objects representing the top crops.
+2. "groqAnalysis": A detailed textual analysis (in English) explaining the overall agricultural strategy for these conditions.
 
-📋 SECTION 1: WHY THIS CROP IS BEST FOR THIS FARMER
-- Explain how this crop matches the soil conditions
-- Why it suits the weather/temperature/rainfall
-- Market potential in ${weather.region}
+The "recommendations" array MUST follow this exact structure for each crop:
+[
+  {
+    "cropName": "Name of the crop",
+    "suitabilityScore": A number from 0 to 100 representing how suitable the crop is,
+    "whySuitable": [Array of 3-4 short strings explaining why this crop fits the soil/weather],
+    "expectedYield": "String describing expected yield (e.g., '40-50 quintal/hectare')",
+    "sowingSeason": "String describing best planting season (e.g., 'May - July')",
+    "waterRequirement": "String describing water needs (e.g., '400-600 mm')",
+    "riskLevel": "Low", "Medium" or "High",
+    "marketDemand": "Low", "Medium" or "High",
+    "fertilizer": {
+      "nitrogen": "Recommended N amount",
+      "phosphorus": "Recommended P amount",
+      "potassium": "Recommended K amount",
+      "organicMatter": "Recommended organic matter"
+    },
+    "additionalTips": [Array of 2-3 short strings with extra farming tips]
+  }
+]
 
-🌱 SECTION 2: SOIL PREPARATION & IMPROVEMENT
-- Pre-planting soil preparation steps
-- Fertilizer recommendations with Indian brand names
-- Any pH adjustments needed
-- Timeline for preparation
+Ensure the response is IN ENGLISH ONLY and strictly parseable as JSON.`;
 
-💧 SECTION 3: PLANTING & WATER MANAGEMENT
-- Best planting season/month
-- Seed rate and spacing
-- Row/line planting details
-- Irrigation schedule (weekly/bi-weekly)
-- Rainwater management tips
-
-🐛 SECTION 4: PEST & DISEASE MANAGEMENT
-- Common pests/diseases in ${weather.region} for ${topCrop.cropName}
-- Prevention methods
-- Treatment options with product names
-- When to monitor
-
-📊 SECTION 5: MONITORING & CARE
-- Growth stages and expected timeline
-- What to look for at each stage
-- Common problems and solutions
-
-🎯 SECTION 6: HARVESTING
-- When to harvest
-- Harvesting method
-- Post-harvest handling
-- Expected yield per acre for these conditions
-
-💰 SECTION 7: MARKET & ECONOMICS
-- Current market price in ${weather.region}
-- Market demand
-- Export opportunities
-- Cost breakdown and expected profit
-
-Use simple, farmer-friendly language. Include local terms in Hindi. Use emojis for clarity.`;
-
-    console.log('📤 Sending Groq API request...');
+    console.log('📤 Sending Groq API request for pure AI crop recommendations...');
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
             role: 'system',
-            content: 'You are an expert Indian agricultural scientist. Provide detailed, practical, actionable farming advice in simple language. Include both Hindi and English.'
+            content: 'You are an expert agricultural scientist. You MUST output ONLY raw, valid JSON. No markdown, no explanations.'
           },
           {
             role: 'user',
@@ -116,7 +79,7 @@ Use simple, farmer-friendly language. Include local terms in Hindi. Use emojis f
           }
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 3500,
         top_p: 0.95
       },
       {
@@ -127,52 +90,44 @@ Use simple, farmer-friendly language. Include local terms in Hindi. Use emojis f
       }
     );
 
-    const groqAnalysis = response.data.choices[0].message.content;
-    console.log('✅ Groq API response received successfully');
+    let content = response.data.choices[0].message.content.trim();
+    // In case the model still outputs markdown blocks, strip them
+    if (content.startsWith('\`\`\`json')) {
+      content = content.replace(/^\`\`\`json/i, '').replace(/\`\`\`$/, '').trim();
+    } else if (content.startsWith('\`\`\`')) {
+      content = content.replace(/^\`\`\`/i, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const parsedData = JSON.parse(content);
+    console.log('✅ Groq API response successfully parsed as JSON');
+
+    // Add rank inside the parsed items manually for the frontend
+    if (parsedData.recommendations && Array.isArray(parsedData.recommendations)) {
+      parsedData.recommendations.forEach((item, index) => {
+        item.rank = index + 1;
+      });
+    }
 
     return {
       status: 'success',
-      recommendations: [topCrop], // Return ONLY the top crop
-      groqAnalysis: groqAnalysis,
-      message: 'Top crop recommendation with detailed Groq AI analysis'
+      recommendations: parsedData.recommendations || [],
+      groqAnalysis: parsedData.groqAnalysis || 'Analysis generated successfully.',
+      message: 'AI generated crop recommendations'
     };
   } catch (error) {
     console.error('❌ Groq API Error:', error.response?.data || error.message);
-    if (error.response?.data) {
-      console.error('API Error Details:', JSON.stringify(error.response.data, null, 2));
-    }
-    
-    // Return at least the top crop even if Groq fails
-    const topCrop = recommendations && recommendations.length > 0 ? recommendations[0] : null;
-    
-    return {
-      status: 'success',
-      recommendations: topCrop ? [topCrop] : [],
-      groqAnalysis: null,
-      error: error.response?.data?.error?.message || error.message,
-      message: 'Base recommendation only (Groq AI analysis failed)'
-    };
+    throw new Error('Failed to generate AI recommendations: ' + (error.response?.data?.error?.message || error.message));
   }
 };
 
 /**
  * Get Groq AI advice for specific crop
- * @param {Object} crop - Crop recommendation object
- * @param {Object} soil - Soil data
- * @param {Object} weather - Weather data
- * @returns {Promise} Groq AI advice for the crop
  */
 exports.getCropSpecificAdvice = async (cropName, soil, weather) => {
   try {
-    if (!GROQ_API_KEY) {
-      return {
-        status: 'error',
-        message: 'Groq API key not configured',
-        advice: null
-      };
-    }
+    if (!GROQ_API_KEY) throw new Error('Groq API key not configured');
 
-    const prompt = `You are an expert Indian agricultural scientist providing detailed farming advice.
+    const prompt = `You are an expert agricultural scientist providing detailed farming advice.
 
 FARMER WANTS TO GROW: ${cropName}
 
@@ -192,29 +147,25 @@ Provide specific advice for growing ${cropName}:
 
 1. SOIL PREPARATION: What steps to take before planting
 2. PLANTING: When to plant, seed rate, spacing
-3. FERTILIZER: Month-by-month application schedule with brand names
+3. FERTILIZER: Month-by-month application schedule
 4. IRRIGATION: Weekly watering schedule
 5. PEST/DISEASE: Common problems in ${weather.region} and solutions
 6. HARVESTING: When and how to harvest
 7. EXPECTED YIELD: Realistic production per acre
 8. MARKET: Current price and demand in ${weather.region}
 
-Write in simple Hindi/English. Use practical examples.`;
+Write in clear, simple English. Use practical examples.`;
 
-    console.log('📤 Sending Groq API request for crop-specific advice...');
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
-            role: 'system',
-            content: 'You are an expert Indian agricultural scientist. Provide specific, practical, detailed farming advice in simple language.'
+             role: 'system',
+             content: 'You are an expert agricultural scientist. Provide specific, practical, detailed farming advice in simple English.'
           },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'user', content: prompt }
         ],
         temperature: 0.7,
         max_tokens: 2500,
@@ -228,7 +179,6 @@ Write in simple Hindi/English. Use practical examples.`;
       }
     );
 
-    console.log('✅ Groq API response received for crop advice');
     return {
       status: 'success',
       crop: cropName,
@@ -236,32 +186,16 @@ Write in simple Hindi/English. Use practical examples.`;
     };
   } catch (error) {
     console.error('❌ Groq API Error for crop advice:', error.response?.data || error.message);
-    if (error.response?.data) {
-      console.error('API Error Details:', JSON.stringify(error.response.data, null, 2));
-    }
-    return {
-      status: 'error',
-      crop: cropName,
-      message: 'Failed to get advice',
-      advice: null,
-      error: error.response?.data?.error?.message || error.message
-    };
+    throw new Error('Failed to get crop advice: ' + (error.response?.data?.error?.message || error.message));
   }
 };
 
 /**
  * Get Groq AI analysis for soil improvement
- * @param {Object} soil - Soil data
- * @returns {Promise} Groq AI soil improvement plan
  */
 exports.getSoilImprovementPlan = async (soil) => {
   try {
-    if (!GROQ_API_KEY) {
-      return {
-        status: 'error',
-        message: 'Groq API key not configured'
-      };
-    }
+    if (!GROQ_API_KEY) throw new Error('Groq API key not configured');
 
     const deficiencies = [];
     if (soil.n < 50) deficiencies.push(`Very Low Nitrogen (${soil.n} mg/kg)`);
@@ -271,7 +205,7 @@ exports.getSoilImprovementPlan = async (soil) => {
     if (soil.ph < 5.5) deficiencies.push(`Acidic Soil (pH ${soil.ph})`);
     if (soil.ph > 8) deficiencies.push(`Alkaline Soil (pH ${soil.ph})`);
 
-    const prompt = `You are a soil scientist providing improvement recommendations for an Indian farmer.
+    const prompt = `You are a soil scientist providing improvement recommendations.
 
 SOIL ANALYSIS:
 - Type: ${soil.type}
@@ -286,30 +220,26 @@ ${deficiencies.length > 0 ? `ISSUES FOUND:\n${deficiencies.join('\n')}` : 'Soil 
 Create a 12-month soil improvement plan:
 
 1. IMMEDIATE ACTIONS (Month 1-2): First steps
-2. FERTILIZER APPLICATION: Specific products and amounts with Indian brand names
-3. ORGANIC MATTER: Compost, cow dung, green manure options
+2. FERTILIZER APPLICATION: Specific products and amounts
+3. ORGANIC MATTER: Compost, green manure options
 4. pH ADJUSTMENT: If needed
 5. CROP SELECTION: Cover crops to improve soil
-6. BUDGET: Estimated cost in Indian Rupees
+6. BUDGET: Estimated cost
 7. MONITORING: How to track progress
 8. LONG-TERM: Sustainable practices for 3-5 years
 
-Use simple language with local examples.`;
+Use clear, simple English.`;
 
-    console.log('📤 Sending Groq API request for soil improvement plan...');
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
-            role: 'system',
-            content: 'You are an expert soil scientist providing practical soil improvement plans for Indian farmers.'
+             role: 'system',
+             content: 'You are an expert soil scientist providing practical soil improvement plans in simple English.'
           },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'user', content: prompt }
         ],
         temperature: 0.7,
         max_tokens: 2000,
@@ -323,21 +253,12 @@ Use simple language with local examples.`;
       }
     );
 
-    console.log('✅ Groq API response received for soil plan');
     return {
       status: 'success',
       plan: response.data.choices[0].message.content
     };
   } catch (error) {
     console.error('❌ Groq API Error for soil plan:', error.response?.data || error.message);
-    if (error.response?.data) {
-      console.error('API Error Details:', JSON.stringify(error.response.data, null, 2));
-    }
-    return {
-      status: 'error',
-      message: 'Failed to generate soil improvement plan',
-      plan: null,
-      error: error.response?.data?.error?.message || error.message
-    };
+    throw new Error('Failed to generate soil improvement plan: ' + (error.response?.data?.error?.message || error.message));
   }
 };

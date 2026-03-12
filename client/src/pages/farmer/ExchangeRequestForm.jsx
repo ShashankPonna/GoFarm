@@ -3,8 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { exchangeAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 
-// Equipment rates: kg of produce per hour of equipment use
-const EQUIPMENT_RATES = {
+// Default equipment rates (user can override)
+const DEFAULT_EQUIPMENT_RATES = {
     'Tractor': { ratePerHour: 11, unit: 'kg/hour', icon: '🚜' },
     'Rotavator': { ratePerHour: 8, unit: 'kg/hour', icon: '⚙️' },
     'Plough': { ratePerHour: 5, unit: 'kg/hour', icon: '🔧' },
@@ -22,6 +22,7 @@ const ExchangeRequestForm = () => {
     const user = useAuthStore(state => state.user);
 
     const [exchangeType, setExchangeType] = useState('crop'); // 'crop' or 'equipment'
+    const [sendToEveryone, setSendToEveryone] = useState(true); // default: broadcast
     const [formData, setFormData] = useState({
         receiverCustomID: '',
         offeredItem: '',
@@ -30,37 +31,47 @@ const ExchangeRequestForm = () => {
         requestedQuantity: ''
     });
     const [selectedEquipment, setSelectedEquipment] = useState('');
-    const [calculatedHours, setCalculatedHours] = useState(null);
+    const [customRate, setCustomRate] = useState('');
+    const [customHours, setCustomHours] = useState('');
+    const [useCustomHours, setUseCustomHours] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
 
-    // Auto-calculate equipment hours based on offered weight
-    const calculateEquipmentHours = (weight, equipment) => {
-        if (!weight || !equipment || !EQUIPMENT_RATES[equipment]) return null;
-        const rate = EQUIPMENT_RATES[equipment].ratePerHour;
-        const hours = parseFloat(weight) / rate;
+    // Calculate equipment hours
+    const getCalculatedHours = () => {
+        if (!formData.offeredQuantity || !selectedEquipment) return null;
+        const rate = customRate ? parseFloat(customRate) : DEFAULT_EQUIPMENT_RATES[selectedEquipment]?.ratePerHour || 1;
+        if (rate <= 0) return null;
+
+        if (useCustomHours && customHours) {
+            return {
+                hours: parseFloat(customHours),
+                rate,
+                equipment: selectedEquipment,
+                weight: parseFloat(formData.offeredQuantity),
+                isCustom: true
+            };
+        }
+
+        const hours = parseFloat(formData.offeredQuantity) / rate;
         return {
             hours: Math.round(hours * 100) / 100,
             rate,
-            equipment,
-            weight: parseFloat(weight)
+            equipment: selectedEquipment,
+            weight: parseFloat(formData.offeredQuantity),
+            isCustom: false
         };
     };
 
+    const calculatedHours = getCalculatedHours();
+
     const handleEquipmentChange = (equipmentName) => {
         setSelectedEquipment(equipmentName);
+        setCustomRate(DEFAULT_EQUIPMENT_RATES[equipmentName]?.ratePerHour?.toString() || '');
+        setCustomHours('');
+        setUseCustomHours(false);
         setFormData({ ...formData, requestedItem: equipmentName, requestedQuantity: '1' });
-        if (formData.offeredQuantity) {
-            setCalculatedHours(calculateEquipmentHours(formData.offeredQuantity, equipmentName));
-        }
-    };
-
-    const handleOfferedQuantityChange = (value) => {
-        setFormData({ ...formData, offeredQuantity: value });
-        if (exchangeType === 'equipment' && selectedEquipment) {
-            setCalculatedHours(calculateEquipmentHours(value, selectedEquipment));
-        }
     };
 
     const handleSubmit = async (e) => {
@@ -68,21 +79,33 @@ const ExchangeRequestForm = () => {
         setError('');
         setResult(null);
 
-        const { receiverCustomID, offeredItem, offeredQuantity, requestedItem, requestedQuantity } = formData;
-        if (!receiverCustomID || !offeredItem || !offeredQuantity || !requestedItem || !requestedQuantity) {
-            setError('All fields are required');
+        const { offeredItem, offeredQuantity, requestedItem, requestedQuantity } = formData;
+        if (!offeredItem || !offeredQuantity || !requestedItem || !requestedQuantity) {
+            setError('Please fill in all required fields');
+            return;
+        }
+
+        if (!sendToEveryone && !formData.receiverCustomID) {
+            setError('Please enter the receiver\'s ID or toggle "Send to Everyone"');
             return;
         }
 
         setLoading(true);
         try {
-            const response = await exchangeAPI.create({
-                receiverCustomID: receiverCustomID.toUpperCase(),
+            const payload = {
                 offeredItem,
                 offeredQuantity: Number(offeredQuantity),
-                requestedItem: exchangeType === 'equipment' ? `${requestedItem} (${calculatedHours?.hours || 0} hrs)` : requestedItem,
+                requestedItem: exchangeType === 'equipment' && calculatedHours
+                    ? `${requestedItem} (${calculatedHours.hours} hrs @ ${calculatedHours.rate} kg/hr)`
+                    : requestedItem,
                 requestedQuantity: Number(requestedQuantity)
-            });
+            };
+
+            if (!sendToEveryone && formData.receiverCustomID) {
+                payload.receiverCustomID = formData.receiverCustomID.toUpperCase();
+            }
+
+            const response = await exchangeAPI.create(payload);
             setResult({ ...response.data, calculatedHours });
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create exchange request');
@@ -100,7 +123,11 @@ const ExchangeRequestForm = () => {
             <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center px-4">
                 <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center space-y-4">
                     <div className="text-6xl">🎉</div>
-                    <h3 className="text-xl font-bold text-green-700">Exchange Request Created!</h3>
+                    <h3 className="text-xl font-bold text-green-700">
+                        {result.exchange?.isOpen !== false && !result.exchange?.receiverCustomID
+                            ? 'Open Exchange Posted!'
+                            : 'Exchange Request Created!'}
+                    </h3>
                     <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
                         <p className="text-sm text-gray-600 mb-1">Exchange ID:</p>
                         <p className="text-3xl font-bold text-green-700 font-mono">{result.exchange.exchangeID}</p>
@@ -108,18 +135,24 @@ const ExchangeRequestForm = () => {
                     <div className="bg-gray-50 rounded-xl p-4 text-sm text-left space-y-2">
                         <p><strong>You offer:</strong> {result.exchange.offeredQuantity} kg {result.exchange.offeredItem}</p>
                         <p><strong>You want:</strong> {result.exchange.requestedItem}</p>
+                        {result.exchange.isOpen && (
+                            <p className="text-green-600 font-semibold">📢 Visible to everyone — anyone can accept!</p>
+                        )}
+                        {result.exchange.receiverCustomID && (
+                            <p><strong>Sent to:</strong> {result.exchange.receiverCustomID}</p>
+                        )}
                         {result.calculatedHours && (
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                                <p className="text-blue-800 font-bold">⏱️ Equipment Time Calculation:</p>
+                                <p className="text-blue-800 font-bold">⏱️ Equipment Time:</p>
                                 <p className="text-blue-700">{result.calculatedHours.weight} kg → {result.calculatedHours.hours} hours of {result.calculatedHours.equipment}</p>
-                                <p className="text-xs text-blue-500">Rate: {result.calculatedHours.rate} kg/hour</p>
+                                <p className="text-xs text-blue-500">Rate: {result.calculatedHours.rate} kg/hour {result.calculatedHours.isCustom ? '(custom)' : ''}</p>
                             </div>
                         )}
                         <p><strong>Offered value:</strong> ₹{result.exchange.calculatedOfferedValue}</p>
                         <p><strong>Requested value:</strong> ₹{result.exchange.calculatedRequestedValue}</p>
                     </div>
                     <div className="flex gap-3">
-                        <button onClick={() => { setResult(null); setFormData({ receiverCustomID: '', offeredItem: '', offeredQuantity: '', requestedItem: '', requestedQuantity: '' }); setCalculatedHours(null); setSelectedEquipment(''); }}
+                        <button onClick={() => { setResult(null); setFormData({ receiverCustomID: '', offeredItem: '', offeredQuantity: '', requestedItem: '', requestedQuantity: '' }); setSelectedEquipment(''); setCustomRate(''); setCustomHours(''); setUseCustomHours(false); }}
                             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg">
                             New Exchange
                         </button>
@@ -153,7 +186,7 @@ const ExchangeRequestForm = () => {
 
                 {/* Exchange Type Toggle */}
                 <div className="flex mb-5 bg-gray-100 rounded-lg p-1">
-                    <button onClick={() => { setExchangeType('crop'); setSelectedEquipment(''); setCalculatedHours(null); setFormData({ ...formData, requestedItem: '', requestedQuantity: '' }); }}
+                    <button onClick={() => { setExchangeType('crop'); setSelectedEquipment(''); setCustomRate(''); setCustomHours(''); setUseCustomHours(false); setFormData({ ...formData, requestedItem: '', requestedQuantity: '' }); }}
                         className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${exchangeType === 'crop' ? 'bg-green-600 text-white shadow' : 'text-gray-600'}`}>
                         🌾 Crop Exchange
                     </button>
@@ -168,12 +201,30 @@ const ExchangeRequestForm = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Receiver ID */}
-                    <div>
-                        <label className="block text-gray-700 font-semibold mb-1 text-sm">Receiver's ID</label>
-                        <input type="text" value={formData.receiverCustomID}
-                            onChange={(e) => setFormData({ ...formData, receiverCustomID: e.target.value.toUpperCase() })}
-                            className={`${inputClass} font-mono`} placeholder="FARM-XXXX or RET-XXXX" required />
+                    {/* ===== SEND TO EVERYONE TOGGLE ===== */}
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="font-bold text-green-700 text-sm">📢 Send to Everyone</h4>
+                                <p className="text-xs text-gray-500 mt-1">Anyone can see and accept your offer</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setSendToEveryone(!sendToEveryone)}
+                                className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${sendToEveryone ? 'bg-green-500' : 'bg-gray-300'}`}
+                            >
+                                <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${sendToEveryone ? 'translate-x-7' : 'translate-x-0.5'}`}></span>
+                            </button>
+                        </div>
+
+                        {!sendToEveryone && (
+                            <div className="mt-3">
+                                <label className="block text-gray-700 font-semibold mb-1 text-sm">Receiver's ID</label>
+                                <input type="text" value={formData.receiverCustomID}
+                                    onChange={(e) => setFormData({ ...formData, receiverCustomID: e.target.value.toUpperCase() })}
+                                    className={`${inputClass} font-mono`} placeholder="FARM-XXXX or RET-XXXX" required />
+                            </div>
+                        )}
                     </div>
 
                     {/* What you offer */}
@@ -188,7 +239,7 @@ const ExchangeRequestForm = () => {
                         <div>
                             <label className="block text-gray-700 text-sm mb-1">Quantity (kg)</label>
                             <input type="number" step="0.1" min="0.1" value={formData.offeredQuantity}
-                                onChange={(e) => handleOfferedQuantityChange(e.target.value)}
+                                onChange={(e) => setFormData({ ...formData, offeredQuantity: e.target.value })}
                                 className={inputClass} placeholder="e.g. 50" required />
                         </div>
                     </div>
@@ -217,7 +268,7 @@ const ExchangeRequestForm = () => {
                         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
                             <h4 className="font-bold text-purple-700 text-sm">🚜 Select Equipment</h4>
                             <div className="grid grid-cols-2 gap-2">
-                                {Object.entries(EQUIPMENT_RATES).map(([name, data]) => (
+                                {Object.entries(DEFAULT_EQUIPMENT_RATES).map(([name, data]) => (
                                     <button key={name} type="button"
                                         onClick={() => handleEquipmentChange(name)}
                                         className={`p-3 rounded-lg text-left border-2 transition-all text-sm ${selectedEquipment === name
@@ -226,22 +277,55 @@ const ExchangeRequestForm = () => {
                                             }`}>
                                         <span className="text-lg">{data.icon}</span>
                                         <p className="font-bold text-gray-800">{name}</p>
-                                        <p className="text-xs text-gray-500">{data.ratePerHour} kg/hr</p>
+                                        <p className="text-xs text-gray-500">Default: {data.ratePerHour} kg/hr</p>
                                     </button>
                                 ))}
                             </div>
 
-                            {/* Hour Calculation Display */}
+                            {/* Custom Rate Controls */}
+                            {selectedEquipment && (
+                                <div className="bg-white border border-purple-200 rounded-lg p-4 space-y-3">
+                                    <h5 className="font-bold text-purple-600 text-sm">⚙️ Customize Exchange Rate</h5>
+                                    
+                                    <div>
+                                        <label className="block text-gray-700 text-sm mb-1">Rate (kg per hour of equipment use)</label>
+                                        <input type="number" step="0.1" min="0.1" value={customRate}
+                                            onChange={(e) => { setCustomRate(e.target.value); setUseCustomHours(false); }}
+                                            className={inputClass} placeholder={`Default: ${DEFAULT_EQUIPMENT_RATES[selectedEquipment]?.ratePerHour}`} />
+                                        <p className="text-xs text-gray-400 mt-1">How many kg of produce per 1 hour of {selectedEquipment} use</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <input type="checkbox" id="useCustomHours" checked={useCustomHours}
+                                            onChange={(e) => setUseCustomHours(e.target.checked)}
+                                            className="w-4 h-4 accent-purple-600" />
+                                        <label htmlFor="useCustomHours" className="text-sm text-gray-700 font-medium">Set hours directly instead</label>
+                                    </div>
+
+                                    {useCustomHours && (
+                                        <div>
+                                            <label className="block text-gray-700 text-sm mb-1">Hours of equipment use</label>
+                                            <input type="number" step="0.5" min="0.5" value={customHours}
+                                                onChange={(e) => setCustomHours(e.target.value)}
+                                                className={inputClass} placeholder="e.g. 3" />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Calculation Display */}
                             {calculatedHours && (
                                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-4 mt-3">
                                     <p className="text-sm opacity-90">⏱️ Equipment Time Calculation</p>
                                     <div className="mt-2 space-y-1">
                                         <p className="text-2xl font-bold">{calculatedHours.hours} hours</p>
-                                        <p className="text-sm opacity-80">
-                                            of {calculatedHours.equipment} use
-                                        </p>
+                                        <p className="text-sm opacity-80">of {calculatedHours.equipment} use</p>
                                         <div className="border-t border-white/30 pt-2 mt-2 text-xs">
-                                            <p>🌾 {calculatedHours.weight} kg produce ÷ {calculatedHours.rate} kg/hr = {calculatedHours.hours} hrs</p>
+                                            {calculatedHours.isCustom ? (
+                                                <p>✏️ Custom: {calculatedHours.hours} hrs set manually</p>
+                                            ) : (
+                                                <p>🌾 {calculatedHours.weight} kg ÷ {calculatedHours.rate} kg/hr = {calculatedHours.hours} hrs</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -250,7 +334,7 @@ const ExchangeRequestForm = () => {
                     )}
 
                     <button type="submit" className={btnClass} disabled={loading || (exchangeType === 'equipment' && !selectedEquipment)}>
-                        {loading ? '⏳ Creating...' : '🔄 Send Exchange Request'}
+                        {loading ? '⏳ Creating...' : (sendToEveryone ? '📢 Post Open Exchange' : '🔄 Send Exchange Request')}
                     </button>
                 </form>
             </div>

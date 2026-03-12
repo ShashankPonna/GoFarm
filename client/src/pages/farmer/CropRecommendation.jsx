@@ -87,17 +87,6 @@ const CropRecommendation = () => {
     }
   };
 
-  // Soil type color mapping
-  // const getSoilTypeColor = (type) => {
-  //   const colors = {
-  //     'Clay': 'bg-red-100 text-red-800',
-  //     'Loamy': 'bg-green-100 text-green-800',
-  //     'Sandy': 'bg-yellow-100 text-yellow-800',
-  //     'Black Soil': 'bg-gray-100 text-gray-800'
-  //   };
-  //   return colors[type] || 'bg-gray-100 text-gray-800';
-  // };
-
   const getScoreColor = (score) => {
     if (score >= 80) return 'bg-green-500';
     if (score >= 60) return 'bg-yellow-500';
@@ -128,9 +117,9 @@ const CropRecommendation = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-green-700 mb-2">फसल सुझाव</h1>
-          <p className="text-gray-600">Crop Recommendation System</p>
-          <p className="text-sm text-gray-500 mt-2">आपकी मिट्टी और मौसम के अनुसार सर्वोत्तम फसले</p>
+          <h1 className="text-4xl font-bold text-green-700 mb-2">Crop Recommendation</h1>
+          <p className="text-gray-600">AI-Powered Farming Guidance</p>
+          <p className="text-sm text-gray-500 mt-2">Discover the best crops for your soil and weather</p>
         </div>
 
         {/* Main Container */}
@@ -138,7 +127,7 @@ const CropRecommendation = () => {
           {/* Form Section */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-green-700 mb-4">डेटा दर्ज करें</h2>
+              <h2 className="text-2xl font-bold text-green-700 mb-4">Enter Data</h2>
 
               {/* Tabs */}
               <div className="flex gap-2 mb-4">
@@ -149,7 +138,7 @@ const CropRecommendation = () => {
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                 >
-                  मिट्टी
+                  Soil
                 </button>
                 <button
                   onClick={() => setActiveTab('weather')}
@@ -158,7 +147,7 @@ const CropRecommendation = () => {
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                 >
-                  मौसम
+                  Weather
                 </button>
               </div>
 
@@ -168,7 +157,7 @@ const CropRecommendation = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        मिट्टी का प्रकार
+                        Soil Type
                       </label>
                       <select
                         value={formData.soil.type}
@@ -186,7 +175,7 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        pH स्तर: {formData.soil.ph}
+                        pH Level: {formData.soil.ph}
                       </label>
                       <input
                         type="range"
@@ -197,12 +186,12 @@ const CropRecommendation = () => {
                         onChange={(e) => handleInputChange('soil', 'ph', e.target.value)}
                         className="w-full"
                       />
-                      <span className="text-xs text-gray-500">(4-9 सामान्य रेंज)</span>
+                      <span className="text-xs text-gray-500">(Normal range 4-9)</span>
                     </div>
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        नाइट्रोजन (N): {formData.soil.n} mg/kg
+                        Nitrogen (N): {formData.soil.n} mg/kg
                       </label>
                       <input
                         type="number"
@@ -214,7 +203,7 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        फॉस्फोरस (P): {formData.soil.p} mg/kg
+                        Phosphorus (P): {formData.soil.p} mg/kg
                       </label>
                       <input
                         type="number"
@@ -226,7 +215,7 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        पोटेशियम (K): {formData.soil.k} mg/kg
+                        Potassium (K): {formData.soil.k} mg/kg
                       </label>
                       <input
                         type="number"
@@ -238,7 +227,7 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        जैविक कार्बन: {formData.soil.organicCarbon} %
+                        Organic Carbon: {formData.soil.organicCarbon} %
                       </label>
                       <input
                         type="number"
@@ -256,7 +245,7 @@ const CropRecommendation = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        तापमान: {formData.weather.temp}°C
+                        Temperature: {formData.weather.temp}°C
                       </label>
                       <input
                         type="range"
@@ -271,7 +260,7 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        आर्द्रता: {formData.weather.humidity} %
+                        Humidity: {formData.weather.humidity} %
                       </label>
                       <input
                         type="range"
@@ -286,7 +275,7 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        वार्षिक वर्षा: {formData.weather.rainfall} mm
+                        Annual Rainfall: {formData.weather.rainfall} mm
                       </label>
                       <input
                         type="number"
@@ -298,13 +287,13 @@ const CropRecommendation = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        क्षेत्र/राज्य
+                        Region/State
                       </label>
                       <input
                         type="text"
                         value={formData.weather.region}
                         onChange={(e) => handleInputChange('weather', 'region', e.target.value)}
-                        placeholder="जैसे: महाराष्ट्र"
+                        placeholder="e.g. Maharashtra"
                         className="w-full border border-gray-300 rounded px-3 py-2"
                       />
                     </div>
@@ -317,12 +306,12 @@ const CropRecommendation = () => {
                   disabled={loading}
                   className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition mt-6"
                 >
-                  {loading ? 'सुझाव खोज रहे हैं...' : 'फसल सुझाव खोजें'}
+                  {loading ? 'Finding Recommendations...' : 'Get Recommendations'}
                 </button>
               </form>
 
               {error && (
-                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
                   ⚠️ {error}
                 </div>
               )}
@@ -334,15 +323,15 @@ const CropRecommendation = () => {
             {!recommendations && !loading && (
               <div className="bg-white rounded-lg shadow-lg p-8 text-center">
                 <div className="text-6xl mb-4">🌾</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">अभी कोई सुझाव नहीं</h3>
-                <p className="text-gray-600">अपनी मिट्टी और मौसम का डेटा दर्ज करें और सर्वोत्तम फसलें खोजें</p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Recommendations Yet</h3>
+                <p className="text-gray-600">Enter your soil and weather data to discover the best crops.</p>
               </div>
             )}
 
             {loading && (
-              <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+              <div className="bg-white rounded-lg shadow-lg p-8 text-center text-gray-600">
                 <div className="animate-spin text-4xl mb-4">⌛</div>
-                <p className="text-gray-600">सrizत करके रखिए...</p>
+                <p>Generating AI recommendations...</p>
               </div>
             )}
 
@@ -351,13 +340,13 @@ const CropRecommendation = () => {
                 {/* View Tabs */}
                 <div className="flex gap-2 mb-4 bg-white rounded-lg shadow p-2">
                   <button
-                    onClick={() => setActiveView('results')}
-                    className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeView === 'results'
+                    onClick={() => setActiveTab('results')}
+                    className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeView === 'results' || activeView === 'top_crop'
                         ? 'bg-green-600 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                   >
-                    🌾 फसल सुझाव
+                    🌾 Top Crops
                   </button>
                   <button
                     onClick={() => setActiveView('groq')}
@@ -366,7 +355,7 @@ const CropRecommendation = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                   >
-                    🤖 {loading ? '⌛ AI...' : 'AI विश्लेषण'}
+                    🤖 {loading ? '⌛ AI...' : 'AI Strategy'}
                   </button>
                   <button
                     onClick={getSoilImprovement}
@@ -376,29 +365,29 @@ const CropRecommendation = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
                       }`}
                   >
-                    🌱 मिट्टी योजना
+                    🌱 Soil Plan
                   </button>
                 </div>
 
-                {/* Results View - Show TOP CROP ONLY */}
-                {activeView === 'results' && (
-                  <div className="space-y-4">
-                    {recommendations && recommendations.length > 0 && (
-                      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
+                {/* Results View */}
+                {(activeView === 'results' || activeView === 'top_crop') && (
+                  <div className="space-y-6">
+                    {recommendations && recommendations.length > 0 && recommendations.map((crop, idx) => (
+                      <div key={idx} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4">
+                        <div className={`p-4 ${idx === 0 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white' : 'bg-gray-50 border-b border-gray-200'}`}>
                           <div className="flex items-center justify-between">
                             <div>
-                              <h3 className="text-3xl font-bold flex items-center gap-2">
-                                ⭐ {recommendations[0].cropName}
+                              <h3 className={`text-2xl font-bold flex items-center gap-2 ${idx === 0 ? 'text-white' : 'text-green-700'}`}>
+                                {idx === 0 && '⭐ '}#{idx + 1} {crop.cropName}
                               </h3>
-                              <p className="text-green-100">आपके लिए सबसे अच्छी फसल</p>
+                              {idx === 0 && <p className="text-green-100 text-sm">Best match for your farm</p>}
                             </div>
-                            <div className="text-right">
-                              <div className={`${getScoreColor(recommendations[0].suitabilityScore)} text-white rounded-full w-24 h-24 flex items-center justify-center`}>
-                                <span className="text-4xl font-bold">{recommendations[0].suitabilityScore}</span>
+                            <div className="text-right flex flex-col items-center">
+                              <div className={`${getScoreColor(crop.suitabilityScore)} text-white rounded-full w-16 h-16 flex items-center justify-center`}>
+                                <span className="text-2xl font-bold">{crop.suitabilityScore}</span>
                               </div>
-                              <p className="text-green-100 text-sm mt-1">अनुकूलता स्कोर</p>
+                              <span className={`text-xs mt-1 ${idx === 0 ? 'text-green-100' : 'text-gray-500'}`}>Score</span>
                             </div>
                           </div>
                         </div>
@@ -407,91 +396,64 @@ const CropRecommendation = () => {
                         <div className="p-5">
                           {/* Why Suitable */}
                           <div className="mb-4">
-                            <h4 className="font-bold text-gray-800 mb-2">✓ क्यों यह सर्वोत्तम है:</h4>
+                            <h4 className="font-bold text-gray-800 mb-2">✓ Why it's suitable:</h4>
                             <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                              {recommendations[0].whySuitable && recommendations[0].whySuitable.map((reason, i) => (
+                              {crop.whySuitable && crop.whySuitable.map((reason, i) => (
                                 <li key={i}>{reason}</li>
                               ))}
                             </ul>
                           </div>
 
                           {/* Stats Grid */}
-                          <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                             <div className="bg-blue-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">अपेक्षित उपज</p>
-                              <p className="font-bold text-blue-700">{recommendations[0].expectedYield || 'उपलब्ध नहीं'}</p>
+                              <p className="text-xs text-gray-600">Expected Yield</p>
+                              <p className="font-bold text-blue-700 text-sm">{crop.expectedYield || 'N/A'}</p>
                             </div>
                             <div className="bg-orange-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">रोपण का मौसम</p>
-                              <p className="font-bold text-orange-700 text-sm">{recommendations[0].sowingSeason || 'उपलब्ध नहीं'}</p>
+                              <p className="text-xs text-gray-600">Sowing Season</p>
+                              <p className="font-bold text-orange-700 text-sm">{crop.sowingSeason || 'N/A'}</p>
                             </div>
                             <div className="bg-cyan-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">जल आवश्यकता</p>
-                              <p className="font-bold text-cyan-700 text-sm">{recommendations[0].waterRequirement || 'उपलब्ध नहीं'}</p>
+                              <p className="text-xs text-gray-600">Water Req.</p>
+                              <p className="font-bold text-cyan-700 text-sm">{crop.waterRequirement || 'N/A'}</p>
                             </div>
                             <div className="bg-purple-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">बाजार मांग</p>
-                              <p className={`font-bold text-sm ${getDemandColor(recommendations[0].marketDemand || 'Medium').split(' ')[1]}`}>
-                                {recommendations[0].marketDemand === 'High' ? 'अधिक' : recommendations[0].marketDemand === 'Medium' ? 'मध्यम' : 'कम'}
+                              <p className="text-xs text-gray-600">Market Demand</p>
+                              <p className={`font-bold text-sm ${getDemandColor(crop.marketDemand || 'Medium').split(' ')[1]}`}>
+                                {crop.marketDemand || 'N/A'}
                               </p>
                             </div>
                           </div>
 
-                          {/* Risk & Demand Badges */}
-                          <div className="flex gap-2 mb-4">
-                            {recommendations[0].riskLevel && (
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRiskColor(recommendations[0].riskLevel)}`}>
-                                जोखिम: {recommendations[0].riskLevel === 'Low' ? 'कम' : recommendations[0].riskLevel === 'Medium' ? 'मध्यम' : 'अधिक'}
-                              </span>
-                            )}
-                            {recommendations[0].marketDemand && (
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getDemandColor(recommendations[0].marketDemand)}`}>
-                                मांग: {recommendations[0].marketDemand === 'High' ? 'अधिक' : recommendations[0].marketDemand === 'Medium' ? 'मध्यम' : 'कम'}
-                              </span>
-                            )}
-                          </div>
-
                           {/* Fertilizer Section */}
-                          <div className="bg-yellow-50 p-3 rounded mb-4">
-                            <h4 className="font-bold text-gray-800 mb-2">🌱 NPK खाद सुझाव:</h4>
-                            <div className="space-y-1 text-sm">
-                              <p><span className="font-semibold">N (नाइट्रोजन):</span> {recommendations[0].fertilizer?.nitrogen || 'उपलब्ध नहीं'}</p>
-                              <p><span className="font-semibold">P (फॉस्फोरस):</span> {recommendations[0].fertilizer?.phosphorus || 'उपलब्ध नहीं'}</p>
-                              <p><span className="font-semibold">K (पोटेशियम):</span> {recommendations[0].fertilizer?.potassium || 'उपलब्ध नहीं'}</p>
-                              <p><span className="font-semibold">जैविक पदार्थ:</span> {recommendations[0].fertilizer?.organicMatter || 'उपलब्ध नहीं'}</p>
-                            </div>
-                          </div>
-
-                          {/* Tips */}
-                          {recommendations[0].additionalTips && (
-                            <div className="bg-green-50 p-3 rounded mb-4">
-                              <h4 className="font-bold text-gray-800 mb-2">💡 महत्वपूर्ण सुझाव:</h4>
-                              <ul className="space-y-1 text-xs text-gray-700">
-                                {recommendations[0].additionalTips.map((tip, i) => (
-                                  <li key={i} className="flex items-start">
-                                    <span className="mr-2">•</span>
-                                    <span>{tip}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                          {crop.fertilizer && (
+                            <div className="bg-yellow-50 p-3 rounded mb-4">
+                              <h4 className="font-bold text-gray-800 mb-2 text-sm">🌱 Fertilizer Guide:</h4>
+                              <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
+                                <p><span className="font-semibold">N:</span> {crop.fertilizer.nitrogen || 'N/A'}</p>
+                                <p><span className="font-semibold">P:</span> {crop.fertilizer.phosphorus || 'N/A'}</p>
+                                <p><span className="font-semibold">K:</span> {crop.fertilizer.potassium || 'N/A'}</p>
+                                <p className="col-span-2"><span className="font-semibold">Organic:</span> {crop.fertilizer.organicMatter || 'N/A'}</p>
+                              </div>
                             </div>
                           )}
 
                           {/* Get Detailed Advice Button */}
                           <button
-                            onClick={() => getCropSpecificAdvice(recommendations[0].cropName)}
+                            onClick={() => getCropSpecificAdvice(crop.cropName)}
                             disabled={adviceLoading}
-                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-bold disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-bold disabled:opacity-50 mt-2"
                           >
-                            {adviceLoading && selectedCrop === recommendations[0].cropName ? (
-                              '📋 विस्तृत सलाह प्राप्त कर रहे हैं...'
+                            {adviceLoading && selectedCrop === crop.cropName ? (
+                              '📋 Fetching detailed advice...'
                             ) : (
-                              '📋 इस फसल के लिए विस्तृत AI सलाह'
+                              `📋 Get detailed AI advice for ${crop.cropName}`
                             )}
                           </button>
                         </div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
 
@@ -499,8 +461,8 @@ const CropRecommendation = () => {
                 {activeView === 'groq' && (
                   <div className="bg-white rounded-lg shadow-lg p-6">
                     <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-lg mb-4">
-                      <h2 className="text-2xl font-bold mb-1">🤖 Groq AI विश्लेषण</h2>
-                      <p className="text-blue-100">आपकी मिट्टी और मौसम के लिए {recommendations && recommendations.length > 0 ? recommendations[0].cropName : 'फसल'} की विस्तृत जानकारी</p>
+                      <h2 className="text-2xl font-bold mb-1">🤖 AI Strategy Analysis</h2>
+                      <p className="text-blue-100">Overall agricultural strategy for your conditions</p>
                     </div>
                     {groqAnalysis ? (
                       <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4 max-h-96 overflow-y-auto bg-gray-50 rounded">
@@ -509,9 +471,8 @@ const CropRecommendation = () => {
                     ) : (
                       <div className="text-center p-8">
                         <div className="text-gray-400 mb-3">
-                          {loading ? '⌛ विश्लेषण प्राप्त कर रहे हैं...' : '📊 AI विश्लेषण अभी उपलब्ध नहीं है'}
+                          {loading ? '⌛ Fetching analysis...' : '📊 AI analysis not available'}
                         </div>
-                        {loading && <div className="animate-pulse text-gray-400">कृपया प्रतीक्षा करें...</div>}
                       </div>
                     )}
                   </div>
@@ -521,17 +482,17 @@ const CropRecommendation = () => {
                 {activeView === 'advice' && cropAdvice && (
                   <div className="bg-white rounded-lg shadow-lg p-6">
                     <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-t-lg mb-4">
-                      <h2 className="text-2xl font-bold mb-1">📋 {selectedCrop} के लिए विस्तृत सलाह</h2>
-                      <p className="text-purple-100">Groq AI द्वारा तैयार विशेष कृषि सलाह</p>
+                      <h2 className="text-2xl font-bold mb-1">📋 Detailed Advice for {selectedCrop}</h2>
+                      <p className="text-purple-100">Step-by-step guidance from Groq AI</p>
                     </div>
-                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4">
+                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4 bg-gray-50 rounded border border-gray-100">
                       {cropAdvice}
                     </div>
                     <button
                       onClick={() => setActiveView('results')}
-                      className="mt-4 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+                      className="mt-6 bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition font-medium"
                     >
-                      ← पिछले सुझाव देखें
+                      ← Back to Recommendations
                     </button>
                   </div>
                 )}
@@ -540,17 +501,17 @@ const CropRecommendation = () => {
                 {activeView === 'soilplan' && soilPlan && (
                   <div className="bg-white rounded-lg shadow-lg p-6">
                     <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-lg mb-4">
-                      <h2 className="text-2xl font-bold mb-1">🌱 मिट्टी सुधार योजना</h2>
-                      <p className="text-green-100">12 महीने की विस्तृत मिट्टी सुधार योजना</p>
+                      <h2 className="text-2xl font-bold mb-1">🌱 Soil Improvement Plan</h2>
+                      <p className="text-green-100">12-month strategy to optimize your soil</p>
                     </div>
-                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4">
+                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4 bg-gray-50 rounded border border-gray-100">
                       {soilPlan}
                     </div>
                     <button
                       onClick={() => setActiveView('results')}
-                      className="mt-4 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+                      className="mt-6 bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition font-medium"
                     >
-                      ← पिछले सुझाव देखें
+                      ← Back to Recommendations
                     </button>
                   </div>
                 )}

@@ -43,30 +43,9 @@ exports.createExchangeRequest = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Requester not found' });
         }
 
-        // Validate required fields
-        if (!receiverCustomID || !offeredItem || !offeredQuantity || !requestedItem || !requestedQuantity) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
-        }
-
-        // Prevent self-exchange
-        if (requester.customID === receiverCustomID.toUpperCase()) {
-            return res.status(400).json({ success: false, message: 'Cannot exchange with yourself' });
-        }
-
-        // Validate receiver exists
-        const receiver = await User.findOne({ customID: receiverCustomID.toUpperCase() });
-        if (!receiver) {
-            return res.status(404).json({ success: false, message: `No user found with ID: ${receiverCustomID}` });
-        }
-
-        // Validate same district or taluka
-        const sameDistrict = requester.location.district === receiver.location.district;
-        const sameTaluka = requester.location.taluka === receiver.location.taluka;
-        if (!sameDistrict && !sameTaluka) {
-            return res.status(400).json({
-                success: false,
-                message: 'Exchange only allowed between users in the same district or taluka'
-            });
+        // Validate required fields (receiverCustomID is optional for broadcast)
+        if (!offeredItem || !offeredQuantity || !requestedItem || !requestedQuantity) {
+            return res.status(400).json({ success: false, message: 'Offered item, quantity, requested item, and quantity are required' });
         }
 
         // Check trust score threshold (minimum 20)
@@ -77,18 +56,43 @@ exports.createExchangeRequest = async (req, res) => {
             });
         }
 
-        // Prevent duplicate active exchange between same users
-        const existingActive = await ExchangeRequest.findOne({
-            requesterCustomID: requester.customID,
-            receiverCustomID: receiverCustomID.toUpperCase(),
-            status: { $in: ['pending', 'accepted'] }
-        });
-        if (existingActive) {
-            return res.status(409).json({
-                success: false,
-                message: 'You already have an active exchange with this user',
-                existingExchangeID: existingActive.exchangeID
+        const isOpen = !receiverCustomID || receiverCustomID.trim() === '';
+        let receiver = null;
+
+        if (!isOpen) {
+            // Direct exchange — validate receiver
+            if (requester.customID === receiverCustomID.toUpperCase()) {
+                return res.status(400).json({ success: false, message: 'Cannot exchange with yourself' });
+            }
+
+            receiver = await User.findOne({ customID: receiverCustomID.toUpperCase() });
+            if (!receiver) {
+                return res.status(404).json({ success: false, message: `No user found with ID: ${receiverCustomID}` });
+            }
+
+            // Validate same district or taluka
+            const sameDistrict = requester.location?.district === receiver.location?.district;
+            const sameTaluka = requester.location?.taluka === receiver.location?.taluka;
+            if (!sameDistrict && !sameTaluka) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Exchange only allowed between users in the same district or taluka'
+                });
+            }
+
+            // Prevent duplicate active exchange between same users
+            const existingActive = await ExchangeRequest.findOne({
+                requesterCustomID: requester.customID,
+                receiverCustomID: receiverCustomID.toUpperCase(),
+                status: { $in: ['pending', 'accepted'] }
             });
+            if (existingActive) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'You already have an active exchange with this user',
+                    existingExchangeID: existingActive.exchangeID
+                });
+            }
         }
 
         // Calculate values from MarketPrice
@@ -103,7 +107,8 @@ exports.createExchangeRequest = async (req, res) => {
         const exchange = await ExchangeRequest.create({
             exchangeID,
             requesterCustomID: requester.customID,
-            receiverCustomID: receiverCustomID.toUpperCase(),
+            receiverCustomID: isOpen ? '' : receiverCustomID.toUpperCase(),
+            isOpen,
             offeredItem: offeredItem.trim(),
             offeredQuantity,
             requestedItem: requestedItem.trim(),
@@ -116,26 +121,38 @@ exports.createExchangeRequest = async (req, res) => {
             paymentStatus: paymentMethod === 'online' ? 'pending' : (paymentMethod === 'cod' ? 'pending' : 'not_required'),
             requesterName: requester.name,
             requesterPhone: requester.phone,
-            receiverName: receiver.name,
-            receiverPhone: receiver.phone
+            receiverName: receiver ? receiver.name : '',
+            receiverPhone: receiver ? receiver.phone : ''
         });
 
-        // Socket.IO notification to receiver (if connected)
+        // Socket.IO notification
         const io = req.app.get('io');
         if (io) {
-            io.emit(`exchange:new:${receiverCustomID.toUpperCase()}`, {
-                exchangeID: exchange.exchangeID,
-                from: requester.customID,
-                fromName: requester.name,
-                offeredItem,
-                requestedItem,
-                message: `${requester.name} (${requester.customID}) wants to exchange ${offeredQuantity} ${offeredItem} for ${requestedQuantity} ${requestedItem}`
-            });
+            if (isOpen) {
+                // Broadcast to all connected clients
+                io.emit('exchange:new:open', {
+                    exchangeID: exchange.exchangeID,
+                    from: requester.customID,
+                    fromName: requester.name,
+                    offeredItem,
+                    requestedItem,
+                    message: `${requester.name} posted an open exchange: ${offeredQuantity} ${offeredItem} for ${requestedQuantity} ${requestedItem}`
+                });
+            } else {
+                io.emit(`exchange:new:${receiverCustomID.toUpperCase()}`, {
+                    exchangeID: exchange.exchangeID,
+                    from: requester.customID,
+                    fromName: requester.name,
+                    offeredItem,
+                    requestedItem,
+                    message: `${requester.name} (${requester.customID}) wants to exchange ${offeredQuantity} ${offeredItem} for ${requestedQuantity} ${requestedItem}`
+                });
+            }
         }
 
         res.status(201).json({
             success: true,
-            message: 'Exchange request created successfully',
+            message: isOpen ? 'Open exchange offer posted! Anyone can accept.' : 'Exchange request created successfully',
             exchange,
             valueInfo: {
                 offeredItemPrice: offered.found ? `₹${offered.pricePerUnit}/${offered.unit}` : 'Price not found',
@@ -171,6 +188,31 @@ exports.getSentRequests = async (req, res) => {
 };
 
 // ─────────────────────────────────────
+// 2b) GET OPEN/BROADCAST EXCHANGES
+// ─────────────────────────────────────
+/**
+ * GET /api/exchange/open
+ * Returns open exchange offers (visible to everyone, anyone can accept)
+ */
+exports.getOpenExchanges = async (req, res) => {
+    try {
+        const user = await User.findOne({ firebaseUID: req.firebaseUID });
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        // Get all open pending exchanges, excluding your own
+        const exchanges = await ExchangeRequest.find({
+            isOpen: true,
+            status: 'pending',
+            requesterCustomID: { $ne: user.customID }
+        }).sort({ createdAt: -1 });
+
+        res.json({ success: true, count: exchanges.length, exchanges });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
+
+// ─────────────────────────────────────
 // 3) GET RECEIVED REQUESTS
 // ─────────────────────────────────────
 /**
@@ -196,7 +238,8 @@ exports.getReceivedRequests = async (req, res) => {
 // ─────────────────────────────────────
 /**
  * PUT /api/exchange/:id/accept
- * Only the receiver can accept. Only works on pending exchanges.
+ * For direct exchanges: only the named receiver can accept.
+ * For open exchanges: any authenticated user (except the requester) can accept.
  */
 exports.acceptExchange = async (req, res) => {
     try {
@@ -206,17 +249,31 @@ exports.acceptExchange = async (req, res) => {
         const exchange = await ExchangeRequest.findOne({ exchangeID: req.params.id });
         if (!exchange) return res.status(404).json({ success: false, message: 'Exchange not found' });
 
-        // Only receiver can accept
-        if (exchange.receiverCustomID !== user.customID) {
-            return res.status(403).json({ success: false, message: 'Only the receiver can accept this exchange' });
-        }
-
         // Only pending can be accepted
         if (exchange.status !== 'pending') {
             return res.status(400).json({ success: false, message: `Cannot accept exchange with status: ${exchange.status}` });
         }
 
+        // Cannot accept your own exchange
+        if (exchange.requesterCustomID === user.customID) {
+            return res.status(400).json({ success: false, message: 'Cannot accept your own exchange offer' });
+        }
+
+        if (exchange.isOpen) {
+            // Open exchange — any user can accept. Claim it.
+            exchange.receiverCustomID = user.customID;
+            exchange.receiverName = user.name;
+            exchange.receiverPhone = user.phone;
+            exchange.isOpen = false;
+        } else {
+            // Direct exchange — only the named receiver can accept
+            if (exchange.receiverCustomID !== user.customID) {
+                return res.status(403).json({ success: false, message: 'Only the receiver can accept this exchange' });
+            }
+        }
+
         exchange.status = 'accepted';
+        exchange.acceptedAt = new Date();
         await exchange.save();
 
         // Notify requester
@@ -225,6 +282,7 @@ exports.acceptExchange = async (req, res) => {
             io.emit(`exchange:accepted:${exchange.requesterCustomID}`, {
                 exchangeID: exchange.exchangeID,
                 acceptedBy: user.customID,
+                acceptedByName: user.name,
                 message: `${user.name} accepted your exchange request`
             });
         }

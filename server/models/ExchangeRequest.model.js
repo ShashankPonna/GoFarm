@@ -20,10 +20,17 @@ const exchangeRequestSchema = new mongoose.Schema({
         index: true
     },
 
-    // Receiver (who gets the request)
+    // Receiver (who gets the request) - optional for open/broadcast offers
     receiverCustomID: {
         type: String,
-        required: [true, 'Receiver ID is required'],
+        default: '',
+        index: true
+    },
+
+    // Open offer (visible to everyone, anyone can accept)
+    isOpen: {
+        type: Boolean,
+        default: false,
         index: true
     },
 
@@ -84,6 +91,10 @@ const exchangeRequestSchema = new mongoose.Schema({
     },
 
     completedAt: {
+        type: Date,
+        default: null
+    },
+    acceptedAt: {
         type: Date,
         default: null
     },
