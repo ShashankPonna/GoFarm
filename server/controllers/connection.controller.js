@@ -100,7 +100,9 @@ exports.getMyConnections = async (req, res) => {
         
         const connections = await Connection.find({
             $or: [{ sender: userId }, { receiver: userId }]
-        });
+        })
+        .populate('sender', 'name customID phone')
+        .populate('receiver', 'name customID phone');
         
         res.status(200).json({ success: true, connections });
     } catch (error) {

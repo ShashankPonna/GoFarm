@@ -44,6 +44,14 @@ const RetailerDashboard = () => {
             <h3 className="text-xl font-extrabold text-[#2E7D32] mb-2 tracking-tight">Orders</h3>
             <p className="text-[#555] text-sm font-medium">View and manage your orders</p>
           </Link>
+
+          <Link to="/retailer/connections" className="card border-t-[6px] border-[#9C27B0] group">
+            <div className="w-[70px] h-[70px] bg-[#F3E5F5] rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-inner">
+              <i className="fas fa-handshake text-[#9C27B0] text-3xl"></i>
+            </div>
+            <h3 className="text-xl font-extrabold text-[#2E7D32] mb-2 tracking-tight">Connections</h3>
+            <p className="text-[#555] text-sm font-medium">Accept and manage invitations from farmers</p>
+          </Link>
         </div>
       </div>
 

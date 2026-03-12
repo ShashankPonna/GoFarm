@@ -41,6 +41,7 @@ import RetailerOptions from './pages/retailer/RetailerOptions';
 import RetailerProductsList from './pages/retailer/RetailerProductsList';
 import RetailerChatBot from './pages/retailer/ChatBot';
 import RetailerConsumerListings from './pages/retailer/RetailerConsumerListings';
+import RetailerConnections from './pages/retailer/RetailerConnections';
 
 
 // Consumer Pages
@@ -271,6 +272,11 @@ function App() {
               <Route path="/retailer/consumer-listings" element={
                 <ProtectedRoute allowedRoles={['retailer']}>
                   <RetailerConsumerListings />
+                </ProtectedRoute>
+              } />
+              <Route path="/retailer/connections" element={
+                <ProtectedRoute allowedRoles={['retailer']}>
+                  <RetailerConnections />
                 </ProtectedRoute>
               } />
 
