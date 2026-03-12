@@ -1,0 +1,28 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+client/node_modules/
+client/build/
+.DS_Store
+*.log
+logs/
+
+# Cotton Disease Detection - Sensitive Files
+server/config/firebase-service-account.json
+server/config/*.json
+!server/config/*.example.json
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Dependencies
+package-lock.json

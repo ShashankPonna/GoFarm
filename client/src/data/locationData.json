@@ -1,0 +1,30 @@
+{
+  "districts": [
+    {
+      "name": "Pune",
+      "talukas": [
+        {
+          "name": "Haveli",
+          "villages": ["Wagholi", "Kharadi", "Kondhwa"]
+        },
+        {
+          "name": "Mulshi",
+          "villages": ["Pirangut", "Paud", "Lavale"]
+        }
+      ]
+    },
+    {
+      "name": "Nashik",
+      "talukas": [
+        {
+          "name": "Niphad",
+          "villages": ["Niphad", "Saykheda", "Pimpalgaon"]
+        },
+        {
+          "name": "Sinnar",
+          "villages": ["Sinnar", "Malegaon", "Pandhurli"]
+        }
+      ]
+    }
+  ]
+}
