@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { connectionsAPI } from '../../utils/api';
+import { useAuthStore } from '../../store/authStore';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -7,20 +9,63 @@ const RetailerContact = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+  const { user, isAuthenticated } = useAuthStore();
+  const [connections, setConnections] = useState([]);
+  const [requestingId, setRequestingId] = useState(null);
+
   useEffect(() => {
-    const fetchRetailers = async () => {
+    const fetchData = async () => {
       try {
+        setLoading(true);
+        // Fetch retailers
         const res = await fetch(`${API_BASE}/users/retailers`);
         const data = await res.json();
         setRetailers(data.retailers || []);
+
+        // Fetch connections if authenticated
+        if (isAuthenticated) {
+          const connRes = await connectionsAPI.getMyConnections();
+          if (connRes.data.success) {
+            setConnections(connRes.data.connections);
+          }
+        }
       } catch (err) {
-        console.error('Failed to fetch retailers:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchRetailers();
-  }, []);
+    fetchData();
+  }, [isAuthenticated]);
+
+  const handleSendInvitation = async (retailerId) => {
+    if (!isAuthenticated) {
+      alert("Please log in to send connections.");
+      return;
+    }
+    
+    try {
+      setRequestingId(retailerId);
+      const res = await connectionsAPI.sendRequest(retailerId);
+      if (res.data.success) {
+        setConnections(prev => [...prev, res.data.connection]);
+      }
+    } catch (err) {
+      console.error("Failed to send invitation:", err);
+      alert(err.response?.data?.message || "Failed to send invitation");
+    } finally {
+      setRequestingId(null);
+    }
+  };
+
+  const getConnectionStatus = (retailerId) => {
+    if (!isAuthenticated || !user) return 'none';
+    const conn = connections.find(c => 
+      (c.sender === user._id && c.receiver === retailerId) || 
+      (c.receiver === user._id && c.sender === retailerId)
+    );
+    return conn ? conn.status : 'none';
+  };
 
   const filtered = retailers.filter(r =>
     r.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -30,10 +75,6 @@ const RetailerContact = () => {
   );
 
   const getPhone = (r) => r.phone || r.mobile || '';
-
-  const callRetailer = (phone) => {
-    if (phone) window.open(`tel:${phone}`);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
@@ -133,13 +174,13 @@ const RetailerContact = () => {
 
                       {/* Contact Details */}
                       <div className="space-y-2 mb-4 flex-grow">
-                        {phone && (
+                        {phone && getConnectionStatus(retailer._id) === 'accepted' && (
                           <div className="flex items-center gap-2 text-gray-600 text-sm">
                             <i className="fas fa-phone text-green-600 w-4"></i>
                             <span className="font-medium">{phone}</span>
                           </div>
                         )}
-                        {retailer.email && (
+                        {retailer.email && getConnectionStatus(retailer._id) === 'accepted' && (
                           <div className="flex items-center gap-2 text-gray-600 text-sm">
                             <i className="fas fa-envelope text-blue-500 w-4"></i>
                             <span className="truncate">{retailer.email}</span>
@@ -158,33 +199,50 @@ const RetailerContact = () => {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 mt-2">
-                        {phone ? (
-                          <>
-                            <button
-                              onClick={() => callRetailer(phone)}
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-                            >
-                              <i className="fas fa-phone"></i> Call
-                            </button>
-                            <a
-                              href={`https://wa.me/91${phone}?text=Hi ${retailer.name || ''}, I am a farmer on GOFaRm and would like to sell you fresh produce.`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-                            >
-                              <i className="fab fa-whatsapp"></i> WhatsApp
-                            </a>
-                          </>
-                        ) : retailer.email ? (
-                          <a
-                            href={`mailto:${retailer.email}?subject=Farm Produce Inquiry - GOFaRm`}
-                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                        {getConnectionStatus(retailer._id) === 'none' ? (
+                          <button
+                            onClick={() => handleSendInvitation(retailer._id)}
+                            disabled={requestingId === retailer._id}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                           >
-                            <i className="fas fa-envelope"></i> Email
-                          </a>
+                            <i className="fas fa-user-plus"></i> {requestingId === retailer._id ? 'Sending...' : 'Send Invitation'}
+                          </button>
+                        ) : getConnectionStatus(retailer._id) === 'pending' ? (
+                          <button
+                            disabled
+                            className="flex-1 bg-yellow-500 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 opacity-80 cursor-not-allowed"
+                          >
+                            <i className="fas fa-clock"></i> Invitation Sent
+                          </button>
+                        ) : getConnectionStatus(retailer._id) === 'accepted' ? (
+                          <>
+                            {phone && (
+                              <a
+                                href={`https://wa.me/91${phone}?text=Hi ${retailer.name || ''}, I am a farmer on GOFaRm and would like to sell you fresh produce.`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                              >
+                                <i className="fab fa-whatsapp"></i> WhatsApp
+                              </a>
+                            )}
+                            {retailer.email && (
+                              <a
+                                href={`mailto:${retailer.email}?subject=Farm Produce Inquiry - GOFaRm`}
+                                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                              >
+                                <i className="fas fa-envelope"></i> Email
+                              </a>
+                            )}
+                            {!phone && !retailer.email && (
+                              <div className="flex-1 text-center text-xs text-gray-400 py-2 italic">
+                                No contact info provided
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <div className="flex-1 text-center text-xs text-gray-400 py-2 italic">
-                            No contact available
+                            Invitation Rejected
                           </div>
                         )}
                       </div>

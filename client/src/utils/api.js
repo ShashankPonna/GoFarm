@@ -207,4 +207,12 @@ export const farmWorkAPI = {
   close: (postId) => api.put(`/work/${postId}/close`),
 };
 
+// Connections API
+export const connectionsAPI = {
+  sendRequest: (receiverId) => api.post(`/connections/send/${receiverId}`),
+  acceptRequest: (connectionId) => api.put(`/connections/accept/${connectionId}`),
+  rejectRequest: (connectionId) => api.put(`/connections/reject/${connectionId}`),
+  getMyConnections: () => api.get('/connections/mine'),
+};
+
 export default api;
