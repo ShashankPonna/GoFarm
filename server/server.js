@@ -36,6 +36,7 @@ const disputeRoutes = require('./routes/dispute.routes');
 const marketIntelligenceRoutes = require('./routes/marketIntelligence.routes');
 const farmWorkRoutes = require('./routes/farmWork.routes');
 const chatbotRoutes = require('./routes/chatbot.routes');
+const connectionRoutes = require('./routes/connection.routes');
 const { startMandiCronJob } = require('./utils/mandiCronJob');
 
 const app = express();
@@ -163,6 +164,7 @@ app.use('/api/exchange', exchangeRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/market', marketIntelligenceRoutes);
 app.use('/api/work', farmWorkRoutes);
+app.use('/api/connections', connectionRoutes);
 
 // ------------------
 // ❌ 404 Handler
