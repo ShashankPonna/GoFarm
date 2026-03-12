@@ -72,7 +72,7 @@ const RetailerDashboard = () => {
             <span className="text-xs font-semibold">Home</span>
           </Link>
 
-          <Link
+{/* <Link
             to="/retailer/community"
             className={`flex flex-col items-center transition-all ${isActive('/retailer/community') ? 'text-orange-600' : 'text-gray-500 hover:text-orange-600'
               }`}
@@ -84,9 +84,10 @@ const RetailerDashboard = () => {
               <i className="fas fa-edit text-xl"></i>
             </div>
             <span className="text-xs font-semibold">Posts</span>
-          </Link>
+          </Link> */}
 
-          <Link
+
+{/* <Link
             to="/chat"
             className={`flex flex-col items-center transition-all ${isActive('/chat') ? 'text-orange-600' : 'text-gray-500 hover:text-orange-600'
               }`}
@@ -98,7 +99,8 @@ const RetailerDashboard = () => {
               <i className="fas fa-comments text-xl"></i>
             </div>
             <span className="text-xs font-semibold">Chat</span>
-          </Link>
+          </Link> */}
+
 
           <Link
             to="/profile"

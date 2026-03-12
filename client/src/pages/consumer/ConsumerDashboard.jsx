@@ -16,8 +16,9 @@ const ConsumerDashboard = () => {
     { icon: 'fa-shopping-cart', title: t('consumerDashboard.myCart'), desc: t('consumerDashboard.viewCartItems'), link: '/cart', color: 'green' },
     { icon: 'fa-tractor', title: t('consumerDashboard.contactFarmers'), desc: t('consumerDashboard.directConnection'), link: '/consumer/farmers', color: 'green' },
     { icon: 'fa-robot', title: t('consumerDashboard.aiAssistant'), desc: t('consumerDashboard.getInstantHelp'), link: '/consumer/chatbot', color: 'indigo' },
-    { icon: 'fa-comments', title: t('consumerDashboard.posts'), desc: t('consumerDashboard.shareConnect'), link: '/posts', color: 'purple' },
-    { icon: 'fa-comment-dots', title: t('consumerDashboard.chat'), desc: t('consumerDashboard.messageOthers'), link: '/chat', color: 'blue' },
+// { icon: 'fa-comments', title: t('consumerDashboard.posts'), desc: t('consumerDashboard.shareConnect'), link: '/posts', color: 'purple' },
+// { icon: 'fa-comment-dots', title: t('consumerDashboard.chat'), desc: t('consumerDashboard.messageOthers'), link: '/chat', color: 'blue' },
+
     { icon: 'fa-newspaper', title: t('consumerDashboard.news'), desc: 'Latest agricultural news', link: '/news', color: 'red' },
     { icon: 'fa-bar-chart', title: t('consumerDashboard.marketPrices'), desc: 'Current market rates', link: '/market-prices', color: 'green' },
     { icon: 'fa-file-contract', title: t('consumerDashboard.govSchemes'), desc: 'Government schemes & benefits', link: '/govt-schemes', color: 'purple' },
@@ -155,7 +156,7 @@ const ConsumerDashboard = () => {
             <span className="text-xs font-semibold">{t('consumerDashboard.home')}</span>
           </Link>
 
-          <Link
+{/* <Link
             to="/posts"
             className={`flex flex-col items-center transition-all ${isActive('/posts') ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
               }`}
@@ -167,9 +168,10 @@ const ConsumerDashboard = () => {
               <i className="fas fa-comments text-xl"></i>
             </div>
             <span className="text-xs font-semibold">{t('consumerDashboard.posts')}</span>
-          </Link>
+          </Link> */}
 
-          <Link
+
+{/* <Link
             to="/chat"
             className={`flex flex-col items-center transition-all ${isActive('/chat') ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
               }`}
@@ -181,7 +183,8 @@ const ConsumerDashboard = () => {
               <i className="fas fa-comments text-xl"></i>
             </div>
             <span className="text-xs font-semibold">{t('consumerDashboard.chat')}</span>
-          </Link>
+          </Link> */}
+
 
           <Link
             to="/profile"

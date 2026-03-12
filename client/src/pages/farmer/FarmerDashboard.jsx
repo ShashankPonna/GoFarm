@@ -179,7 +179,7 @@ const FarmerDashboard = () => {
             <span className="text-xs font-semibold">Home</span>
           </Link>
 
-          <Link
+{/* <Link
             to="/farmer/community"
             className={`flex flex-col items-center transition-all ${isActive('/farmer/community') ? 'text-green-600' : 'text-gray-500 hover:text-green-600'
               }`}
@@ -191,9 +191,10 @@ const FarmerDashboard = () => {
               <i className="fas fa-edit text-xl"></i>
             </div>
             <span className="text-xs font-semibold">Posts</span>
-          </Link>
+          </Link> */}
 
-          <Link
+
+{/* <Link
             to="/chat"
             className={`flex flex-col items-center transition-all ${isActive('/chat') ? 'text-green-600' : 'text-gray-500 hover:text-green-600'
               }`}
@@ -205,7 +206,8 @@ const FarmerDashboard = () => {
               <i className="fas fa-comments text-xl"></i>
             </div>
             <span className="text-xs font-semibold">Chat</span>
-          </Link>
+          </Link> */}
+
 
           <Link
             to="/profile"

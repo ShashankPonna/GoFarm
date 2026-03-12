@@ -73,13 +73,14 @@ const RetailerOptions = () => {
       link: '/retailer/consumer-listings'
     },
 
-    {
-      name: t('retailer.posts'),
-      subtitle: t('retailer.shareConnect'),
-      icon: 'fa-edit',
-      color: 'purple',
-      link: '/retailer/community'
-    }
+    // {
+    //   name: t('retailer.posts'),
+    //   subtitle: t('retailer.shareConnect'),
+    //   icon: 'fa-edit',
+    //   color: 'purple',
+    //   link: '/retailer/community'
+    // }
+
   ];
 
   useEffect(() => {
@@ -243,7 +244,7 @@ const RetailerOptions = () => {
             </div>
             <span className="text-xs font-semibold">{t('common.home')}</span>
           </Link>
-          <Link to="/retailer/community" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
+{/* <Link to="/retailer/community" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
             <div className="rounded-full bg-gray-100 w-12 h-12 flex items-center justify-center mb-1 hover:bg-green-100 transition">
               <i className="fas fa-edit text-xl"></i>
             </div>
@@ -254,7 +255,8 @@ const RetailerOptions = () => {
               <i className="fas fa-comments text-xl"></i>
             </div>
             <span className="text-xs font-semibold">{t('navigation.chat')}</span>
-          </Link>
+          </Link> */}
+
           <Link to="/profile" className="flex flex-col items-center text-gray-500 hover:text-green-600 transition">
             <div className="rounded-full bg-gray-100 w-12 h-12 flex items-center justify-center mb-1 hover:bg-green-100 transition">
               <i className="fas fa-user text-xl"></i>

@@ -75,7 +75,7 @@ const Register = () => {
 
     setLoading(true);
     try {
-      await api.post('/auth/send-otp', { phone });
+      await api.post('/auth/send-otp', { phone, type: 'register' });
       toast.success('OTP sent successfully!');
       setStep(2);
       setResendTimer(60);

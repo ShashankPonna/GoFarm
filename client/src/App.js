@@ -18,7 +18,8 @@ import DiseaseDetection from './pages/DiseaseDetection';
 import CropRecommendation from './pages/farmer/CropRecommendation';
 import WeatherForecast from './pages/farmer/WeatherForecast';
 import ChatBot from './pages/farmer/ChatBot';
-import Posts from './pages/common/Posts';
+// import Posts from './pages/common/Posts';
+
 import MarketIntelligencePage from './pages/farmer/MarketIntelligencePage';
 import RetailerContact from './pages/farmer/RetailerContact';
 import GovernmentSchemes from './pages/farmer/GovernmentSchemes';
@@ -58,7 +59,8 @@ import OrderConfirmation from './pages/consumer/OrderConfirmation';
 
 // Common Pages
 import Profile from './pages/common/Profile';
-import Chat from './pages/common/Chat';
+// import Chat from './pages/common/Chat';
+
 
 import Orders from './pages/common/Orders';
 import MarketPrices from './pages/common/MarketPrices';
@@ -166,11 +168,12 @@ function App() {
                   <ChatBot />
                 </ProtectedRoute>
               } />
-              <Route path="/farmer/community" element={
+{/* <Route path="/farmer/community" element={
                 <ProtectedRoute allowedRoles={['farmer']}>
                   <Posts />
                 </ProtectedRoute>
-              } />
+              } /> */}
+
               <Route path="/farmer/market-intelligence" element={
                 <ProtectedRoute allowedRoles={['farmer']}>
                   <MarketIntelligencePage />
@@ -264,11 +267,12 @@ function App() {
                   <RetailerChatBot />
                 </ProtectedRoute>
               } />
-              <Route path="/retailer/community" element={
+{/* <Route path="/retailer/community" element={
                 <ProtectedRoute allowedRoles={['retailer']}>
                   <Posts />
                 </ProtectedRoute>
-              } />
+              } /> */}
+
               <Route path="/retailer/consumer-listings" element={
                 <ProtectedRoute allowedRoles={['retailer']}>
                   <RetailerConsumerListings />
@@ -306,11 +310,12 @@ function App() {
                   <ConsumerChatBot />
                 </ProtectedRoute>
               } />
-              <Route path="/consumer/community" element={
+{/* <Route path="/consumer/community" element={
                 <ProtectedRoute allowedRoles={['consumer']}>
                   <Posts />
                 </ProtectedRoute>
-              } />
+              } /> */}
+
               <Route path="/consumer/shop" element={
                 <ProtectedRoute allowedRoles={['consumer']}>
                   <ConsumerShop />
@@ -343,26 +348,29 @@ function App() {
                   <ConsumerShop />
                 </ProtectedRoute>
               } />
-              <Route path="/posts" element={
+{/* <Route path="/posts" element={
                 <ProtectedRoute>
                   <Posts />
                 </ProtectedRoute>
-              } />
+              } /> */}
+
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
               } />
-              <Route path="/chat" element={
+{/* <Route path="/chat" element={
                 <ProtectedRoute>
                   <Chat />
                 </ProtectedRoute>
-              } />
-              <Route path="/community" element={
+              } /> */}
+
+{/* <Route path="/community" element={
                 <ProtectedRoute>
                   <Posts />
                 </ProtectedRoute>
-              } />
+              } /> */}
+
               <Route path="/orders" element={
                 <ProtectedRoute>
                   <Orders />

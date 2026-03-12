@@ -42,7 +42,10 @@ const Login = () => {
     setLoading(true);
     try {
       // Send OTP via Twilio Backend
-      const response = await api.post('/auth/send-otp', { phone: phone.trim() });
+      const response = await api.post('/auth/send-otp', { 
+        phone: phone.trim(),
+        type: 'login'
+      });
       
       setUserName(response.data.name || '');
       toast.success('OTP sent successfully!');

@@ -42,19 +42,31 @@ const generateCustomID = async (role) => {
  */
 exports.sendOTP = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, type } = req.body;
+    console.log(`[DEBUG] sendOTP request: phone=${phone}, type=${type}`);
 
     if (!phone) {
       return res.status(400).json({ success: false, message: 'Phone number is required' });
     }
 
-    // Verify if user exists first (for Login flow)
+    // Verify user existence based on flow type
     const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'No account found with this phone number. Please register first.'
-      });
+
+    if (type === 'register') {
+      if (user) {
+        return res.status(409).json({
+          success: false,
+          message: 'Account already exists with this phone number. Please login.'
+        });
+      }
+    } else {
+      // Default to login flow (check if user exists)
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'No account found with this phone number. Please register first.'
+        });
+      }
     }
 
     // Mock Mode Logic
@@ -108,7 +120,7 @@ exports.verifyOTP = async (req, res) => {
       const verificationCheck = await client.verify.v2
         .services(VERIFY_SERVICE_SID)
         .verificationChecks.create({ to: `+91${phone}`, code: otp });
-      
+
       if (verificationCheck.status === 'approved') isVerified = true;
     }
 
@@ -122,14 +134,14 @@ exports.verifyOTP = async (req, res) => {
     if (!user && userData) {
       // Registration flow
       const { name, role, district, taluka, village, pincode } = userData;
-      
+
       // Basic validation
       if (!name || !role || !district || !taluka || !village || !pincode) {
         return res.status(400).json({ success: false, message: 'Incomplete registration data' });
       }
 
       const customID = await generateCustomID(role);
-      
+
       user = new User({
         firebaseUID: `twilio_${phone}`, // Place-holder for consistency
         name,
@@ -335,7 +347,7 @@ exports.getUserProfile = async (req, res) => {
     // req.user is attached by authMiddleware.protect
     // req.firebaseUID is attached by firebaseAuth.verifyFirebaseToken
     const query = req.user ? { _id: req.user._id } : { firebaseUID: req.firebaseUID };
-    
+
     const user = await User.findOne(query);
 
     if (!user) {

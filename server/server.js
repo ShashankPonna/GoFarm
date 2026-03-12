@@ -21,8 +21,9 @@ const userRoutes = require('./routes/user.routes');
 const productRoutes = require('./routes/product.routes');
 const cropRoutes = require('./routes/crop.routes');
 const orderRoutes = require('./routes/order.routes');
-const chatRoutes = require('./routes/chat.routes');
-const postRoutes = require('./routes/post.routes');
+// const chatRoutes = require('./routes/chat.routes');
+// const postRoutes = require('./routes/post.routes');
+
 
 const wishlistRoutes = require('./routes/wishlist.routes');
 const cartRoutes = require('./routes/cart.routes');
@@ -151,9 +152,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/chat', chatRoutes);
 app.use('/api/chatbot', chatbotRoutes);
-app.use('/api/posts', postRoutes);
+// app.use('/api/chat', chatRoutes);
+// app.use('/api/posts', postRoutes);
+
 
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/cart', cartRoutes);
