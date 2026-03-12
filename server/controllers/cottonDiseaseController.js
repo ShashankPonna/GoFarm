@@ -36,28 +36,76 @@ const validateImage = (file) => {
 };
 
 // ============================================================
-// Step 1: Call Local ML Model for Disease Detection
+// Step 1: Call Groq Vision Model for Disease Detection (Replacement for local ML)
 // ============================================================
-const detectDiseaseWithML = async (imageBuffer, originalFilename) => {
+const detectDiseaseWithML = async (imageBuffer, mimetype) => {
   try {
-    console.log('🔗 [ML] Calling Local ML Model...');
+    console.log('🤖 [ML] Calling Groq Vision Model...');
+    
+    // Determine the media type string for Groq API
+    const imageFormat = mimetype || 'image/jpeg';
+    const base64Image = `data:${imageFormat};base64,${imageBuffer.toString('base64')}`;
+    
+    const prompt = `You are an expert plant pathologist. Analyze this crop leaf image.
+Identify what disease it has, if any.
+Respond ONLY with a valid JSON object in this exact format:
+{
+  "disease": "Name of Disease (or 'Healthy')",
+  "confidence_percent": 95
+}
+Do not include any extra text or markdown formatting outside the JSON.`;
 
     const response = await axios.post(
-      ML_API_URL,
-      { image: imageBuffer.toString('base64') },
+      GROQ_API_URL,
       {
-        headers: { 'Content-Type': 'application/json' },
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: base64Image
+                }
+              }
+            ]
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 200
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
         timeout: 30000
       }
     );
 
-    console.log('✅ [ML] Disease detection successful');
+    let content = response.data.choices[0].message.content;
+
+    // Strip markdown code blocks if the LLM wrapped the JSON
+    if (content.startsWith('```json')) {
+      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const prediction = JSON.parse(content);
+    console.log('✅ [ML] Disease detection successful:', prediction);
+
     return {
       success: true,
-      data: response.data
+      data: prediction
     };
   } catch (error) {
     console.error('❌ [ML] Error:', error.message);
+    if (error.response && error.response.data) {
+      console.error('❌ [ML] Response Data:', JSON.stringify(error.response.data, null, 2));
+    }
     return {
       success: false,
       error: error.message,
@@ -187,8 +235,8 @@ exports.detectDisease = async (req, res) => {
     }
     console.log('✅ [detectDisease] Image validated');
 
-    // 2️⃣ Call ML Model for disease detection
-    const mlResult = await detectDiseaseWithML(req.file.buffer, req.file.originalname);
+    // 2️⃣ Call ML Model for disease detection (using Groq Vision)
+    const mlResult = await detectDiseaseWithML(req.file.buffer, req.file.mimetype);
     if (!mlResult.success) {
       console.error('❌ [detectDisease] ML detection failed:', mlResult.error);
       return res.status(503).json({

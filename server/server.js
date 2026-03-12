@@ -23,12 +23,12 @@ const cropRoutes = require('./routes/crop.routes');
 const orderRoutes = require('./routes/order.routes');
 const chatRoutes = require('./routes/chat.routes');
 const postRoutes = require('./routes/post.routes');
-const reportRoutes = require('./routes/report.routes');
+
 const wishlistRoutes = require('./routes/wishlist.routes');
 const cartRoutes = require('./routes/cart.routes');
 const newsRoutes = require('./routes/news.routes');
 const marketPriceRoutes = require('./routes/marketPrice.routes');
-const wasteProductRoutes = require('./routes/wasteProduct.routes');
+
 const cottonDiseaseRoutes = require('./routes/cottonDisease.routes');
 const weatherRoutes = require('./routes/weather.routes');
 const exchangeRoutes = require('./routes/exchange.routes');
@@ -149,12 +149,12 @@ app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/posts', postRoutes);
-app.use('/api/reports', reportRoutes);
+
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/market-prices', marketPriceRoutes);
-app.use('/api/waste-products', wasteProductRoutes);
+
 app.use('/api/cotton', cottonDiseaseRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/exchange', exchangeRoutes);

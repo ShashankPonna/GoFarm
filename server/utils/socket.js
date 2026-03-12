@@ -109,20 +109,7 @@ const emitToAll = (event, data) => {
   }
 };
 
-// Emit waste product events
-const emitWasteProductAdded = (wasteProduct) => {
-  if (io) {
-    io.emit('waste-product-added', wasteProduct);
-    console.log('♻️ Waste product added event emitted:', wasteProduct._id);
-  }
-};
 
-const emitWasteProductUpdated = (wasteProduct) => {
-  if (io) {
-    io.emit('waste-product-updated', wasteProduct);
-    console.log('♻️ Waste product updated event emitted:', wasteProduct._id);
-  }
-};
 
 module.exports = {
   initializeSocket,
@@ -132,7 +119,5 @@ module.exports = {
   emitNewMessage,
   emitNegotiationUpdate,
   emitOrderUpdate,
-  emitToAll,
-  emitWasteProductAdded,
-  emitWasteProductUpdated
+  emitToAll
 };
