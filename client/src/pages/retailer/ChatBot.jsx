@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import BackButton from '../../components/BackButton';
 const ChatBot = () => {
   const [messages, setMessages] = useState([
     { 
@@ -64,9 +65,7 @@ const ChatBot = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4 shadow-lg">
         <div className="flex items-center">
-          <button onClick={() => window.history.back()} className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-            <i className="fas fa-arrow-left text-xl"></i>
-          </button>
+          <BackButton className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
           <div className="flex items-center">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-3 animate-pulse">
               <i className="fas fa-robot text-green-600"></i>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const WeatherForecast = () => {
   const [currentWeather, setCurrentWeather] = useState(null);
@@ -99,9 +100,12 @@ const WeatherForecast = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-900 mb-2">🌤️ मौसम पूर्वानुमान</h1>
-          <p className="text-gray-700">5-दिवसीय विस्तृत मौसम और कृषि सलाह</p>
+        <div className="flex items-center justify-center relative mb-8">
+          <BackButton className="absolute left-0" bgColor="bg-blue-200" color="text-blue-900" />
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-blue-900 mb-2">🌤️ मौसम पूर्वानुमान</h1>
+            <p className="text-gray-700">5-दिवसीय विस्तृत मौसम और कृषि सलाह</p>
+          </div>
         </div>
 
         {error && (

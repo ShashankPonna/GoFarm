@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { productsAPI, IMAGE_BASE_URL } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const ConsumerProductList = () => {
   const { user, isAuthenticated } = useAuthStore(state => ({
@@ -78,9 +79,7 @@ const ConsumerProductList = () => {
       <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button onClick={() => window.history.back()} className="mr-4">
-              <i className="fas fa-arrow-left text-xl"></i>
-            </button>
+            <BackButton className="mr-4" />
             <div>
               <h1 className="text-xl font-bold">🛒 Fresh Products</h1>
               <p className="text-sm text-blue-200">Buy fresh products directly from farmers</p>

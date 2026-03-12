@@ -1,4 +1,5 @@
 import React from 'react';
+import BackButton from '../../components/BackButton';
 
 const MarketPrices = () => {
   const prices = [
@@ -8,8 +9,9 @@ const MarketPrices = () => {
   ];
 
   return (
-    <div className="market-prices">
-      <h1>Market Prices</h1>
+    <div className="market-prices p-6">
+      <BackButton className="mb-4" />
+      <h1 className="text-2xl font-bold mb-4">Market Prices</h1>
       <table>
         <thead>
           <tr>

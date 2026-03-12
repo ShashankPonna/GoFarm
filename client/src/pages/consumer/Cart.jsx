@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/cartStore';
 import { IMAGE_BASE_URL } from '../../utils/api';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -23,9 +24,7 @@ const Cart = () => {
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button onClick={() => navigate(-1)} className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-                <i className="fas fa-arrow-left text-xl"></i>
-              </button>
+              <BackButton className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
               <div>
                 <h1 className="text-3xl font-bold flex items-center">
                   <i className="fas fa-shopping-cart mr-3"></i>

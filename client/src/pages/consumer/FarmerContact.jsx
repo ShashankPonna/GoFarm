@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { productsAPI, chatAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const FarmerContact = () => {
   const navigate = useNavigate();
@@ -184,9 +185,7 @@ const FarmerContact = () => {
       <header className="bg-gradient-to-r from-green-800 to-green-600 text-white py-4 px-6 shadow-lg">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <button onClick={() => window.history.back()} className="mr-2 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-              <i className="fas fa-arrow-left text-xl"></i>
-            </button>
+            <BackButton className="mr-2 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
             <i className="fas fa-tractor text-2xl text-green-200"></i>
             <h1 className="text-2xl font-bold">FarmConnect</h1>
           </div>

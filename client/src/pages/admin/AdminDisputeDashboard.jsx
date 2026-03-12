@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { disputeAPI } from '../../utils/api';
 import { IMAGE_BASE_URL } from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const statusBadge = {
     open: { bg: 'bg-red-100', text: 'text-red-700', label: '🔴 Open' },
@@ -94,9 +95,12 @@ const AdminDisputeDashboard = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-100 to-red-50 pb-24">
             {/* Header */}
             <header className="bg-gradient-to-r from-red-700 to-red-800 text-white py-6 px-6 shadow-lg">
-                <div className="container mx-auto">
-                    <h1 className="text-2xl font-bold">⚖️ Dispute Resolution Dashboard</h1>
-                    <p className="text-red-200 text-sm">Manage disputes, review evidence, resolve conflicts</p>
+                <div className="container mx-auto flex items-center">
+                    <BackButton className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
+                    <div>
+                        <h1 className="text-2xl font-bold">⚖️ Dispute Resolution Dashboard</h1>
+                        <p className="text-red-200 text-sm">Manage disputes, review evidence, resolve conflicts</p>
+                    </div>
                 </div>
             </header>
 

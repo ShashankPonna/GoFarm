@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { exchangeAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
+import BackButton from '../../components/BackButton';
 
 // Default equipment rates (user can override)
 const DEFAULT_EQUIPMENT_RATES = {
@@ -98,7 +99,8 @@ const ExchangeRequestForm = () => {
                 requestedItem: exchangeType === 'equipment' && calculatedHours
                     ? `${requestedItem} (${calculatedHours.hours} hrs @ ${calculatedHours.rate} kg/hr)`
                     : requestedItem,
-                requestedQuantity: Number(requestedQuantity)
+                requestedQuantity: Number(requestedQuantity),
+                category: exchangeType === 'crop' ? 'Crops' : 'Equipment'
             };
 
             if (!sendToEveryone && formData.receiverCustomID) {
@@ -151,15 +153,21 @@ const ExchangeRequestForm = () => {
                         <p><strong>Offered value:</strong> ₹{result.exchange.calculatedOfferedValue}</p>
                         <p><strong>Requested value:</strong> ₹{result.exchange.calculatedRequestedValue}</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-2">
                         <button onClick={() => { setResult(null); setFormData({ receiverCustomID: '', offeredItem: '', offeredQuantity: '', requestedItem: '', requestedQuantity: '' }); setSelectedEquipment(''); setCustomRate(''); setCustomHours(''); setUseCustomHours(false); }}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg">
-                            New Exchange
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">
+                            Create Another Exchange
                         </button>
-                        <button onClick={() => navigate('/farmer/exchanges/sent')}
-                            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg">
-                            View Sent
-                        </button>
+                        <div className="flex gap-2">
+                            <button onClick={() => navigate('/farmer/exchange')}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all">
+                                🔄 Back to Market
+                            </button>
+                            <button onClick={() => navigate('/farmer/exchanges/sent')}
+                                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition-all">
+                                📤 View Sent
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -169,6 +177,7 @@ const ExchangeRequestForm = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 px-4 py-6 pb-24">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-auto">
+                <BackButton bgColor="bg-gray-100" color="text-gray-600" className="mb-4" />
                 <h2 className="text-2xl font-bold text-green-700 mb-1 text-center">🔄 Exchange</h2>
                 <p className="text-gray-500 text-sm text-center mb-4">Barter crops or exchange for equipment hours</p>
 

@@ -49,6 +49,7 @@ export const exchangeAPI = {
   create: (data) => api.post('/exchange/create', data),
   getSent: () => api.get('/exchange/sent'),
   getReceived: () => api.get('/exchange/received'),
+  getOpen: () => api.get('/exchange/open'),
   accept: (exchangeID) => api.put(`/exchange/${exchangeID}/accept`),
   reject: (exchangeID) => api.put(`/exchange/${exchangeID}/reject`),
   complete: (exchangeID) => api.put(`/exchange/${exchangeID}/complete`),

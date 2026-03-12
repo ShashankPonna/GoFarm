@@ -4,6 +4,7 @@ import { productsAPI, chatAPI, IMAGE_BASE_URL } from '../../utils/api';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -114,9 +115,7 @@ const ProductDetails = () => {
       <header className="bg-gradient-to-r from-green-700 to-emerald-700 text-white py-4 px-6 shadow-lg">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center">
-            <button onClick={() => navigate(-1)} className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-              <i className="fas fa-arrow-left text-xl"></i>
-            </button>
+            <BackButton className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
             <h1 className="text-xl font-bold">Product Details</h1>
           </div>
           <button onClick={() => navigate('/cart')} className="relative hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import api from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const CropRecommendation = () => {
   const [formData, setFormData] = useState({
@@ -116,10 +117,13 @@ const CropRecommendation = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-green-700 mb-2">Crop Recommendation</h1>
-          <p className="text-gray-600">AI-Powered Farming Guidance</p>
-          <p className="text-sm text-gray-500 mt-2">Discover the best crops for your soil and weather</p>
+        <div className="flex items-center justify-center relative mb-8">
+          <BackButton className="absolute left-0" bgColor="bg-green-100" color="text-green-800" />
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-green-700 mb-2">Crop Recommendation</h1>
+            <p className="text-gray-600">AI-Powered Farming Guidance</p>
+            <p className="text-sm text-gray-500 mt-2">Discover the best crops for your soil and weather</p>
+          </div>
         </div>
 
         {/* Main Container */}

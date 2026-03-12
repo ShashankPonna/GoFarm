@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import BackButton from '../../components/BackButton';
 const ChatBot = () => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState([
@@ -102,12 +103,7 @@ const ChatBot = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white p-4 shadow-xl backdrop-blur-sm">
         <div className="flex items-center">
-          <button 
-            onClick={() => window.history.back()} 
-            className="mr-4 p-2 rounded-full hover:bg-white/20 transition-all duration-200"
-          >
-            <i className="fas fa-arrow-left text-xl"></i>
-          </button>
+          <BackButton className="mr-4" bgColor="hover:bg-white/20" />
           <div className="flex items-center">
             <div className="relative">
               <div className="w-12 h-12 bg-gradient-to-br from-white to-green-100 rounded-full flex items-center justify-center mr-4 shadow-lg">

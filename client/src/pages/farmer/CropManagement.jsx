@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const CropManagement = () => {
   const [crops, setCrops] = useState([]);
@@ -18,8 +19,9 @@ const CropManagement = () => {
   };
 
   return (
-    <div className="crop-management">
-      <h1>Crop Management</h1>
+    <div className="crop-management p-6">
+      <BackButton bgColor="bg-green-100" color="text-green-800" className="mb-4" />
+      <h1 className="text-3xl font-bold mb-6">Crop Management</h1>
       <div className="crops-grid">
         {crops.map(crop => (
           <div key={crop._id} className="crop-card">

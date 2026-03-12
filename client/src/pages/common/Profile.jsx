@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../components/BackButton';
 import { useAuthStore } from '../../store/authStore';
 
 const Profile = () => {
@@ -55,12 +56,9 @@ const Profile = () => {
         <div className="container mx-auto px-6 py-6 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button
-                onClick={() => window.history.back()}
+              <BackButton
                 className="mr-4 hover:bg-white hover:bg-opacity-20 p-3 rounded-xl transition-all transform hover:scale-110"
-              >
-                <i className="fas fa-arrow-left text-2xl"></i>
-              </button>
+              />
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold">My Account</h1>
                 <p className="text-green-100 mt-1">Manage your profile and settings</p>

@@ -3,6 +3,7 @@ import { connectionsAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const RetailerConnections = () => {
     const [connections, setConnections] = useState([]);
@@ -65,9 +66,7 @@ const RetailerConnections = () => {
             <header className="bg-gradient-to-r from-green-700 to-green-600 text-white p-6 shadow-lg sticky top-0 z-50">
                 <div className="max-w-4xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link to="/retailer/dashboard" className="hover:bg-white/20 p-2 rounded-full transition-colors">
-                            <i className="fas fa-arrow-left text-xl"></i>
-                        </Link>
+                        <BackButton className="p-2" bgColor="hover:bg-white/20" />
                         <div>
                             <h1 className="text-2xl font-bold">Connections</h1>
                             <p className="text-green-100 text-sm">Manage your farmer network</p>

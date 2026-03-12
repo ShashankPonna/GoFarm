@@ -28,6 +28,7 @@ import Negotiation from './pages/farmer/Negotiation';
 import AgricultureProducts from './pages/farmer/AgricultureProducts';
 import ConsumerListings from './pages/farmer/ConsumerListings';
 import ExchangeRequestForm from './pages/farmer/ExchangeRequestForm';
+import ExchangeTab from './pages/farmer/ExchangeTab';
 import MySentRequests from './pages/farmer/MySentRequests';
 import MyReceivedRequests from './pages/farmer/MyReceivedRequests';
 import MyDisputes from './pages/farmer/MyDisputes';
@@ -197,6 +198,11 @@ function App() {
               <Route path="/farmer/negotiation" element={
                 <ProtectedRoute allowedRoles={['farmer']}>
                   <Negotiation />
+                </ProtectedRoute>
+              } />
+              <Route path="/farmer/exchange" element={
+                <ProtectedRoute allowedRoles={['farmer', 'retailer']}>
+                  <ExchangeTab />
                 </ProtectedRoute>
               } />
               <Route path="/farmer/exchange/new" element={

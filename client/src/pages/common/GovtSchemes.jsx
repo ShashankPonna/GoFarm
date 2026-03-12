@@ -1,4 +1,5 @@
 import React from 'react';
+import BackButton from '../../components/BackButton';
 
 const GovtSchemes = () => {
   const schemes = [
@@ -7,8 +8,9 @@ const GovtSchemes = () => {
   ];
 
   return (
-    <div className="govt-schemes">
-      <h1>Government Schemes</h1>
+    <div className="govt-schemes p-6">
+      <BackButton className="mb-4" />
+      <h1 className="text-2xl font-bold mb-4">Government Schemes</h1>
       <div className="schemes-list">
         {schemes.map((scheme, idx) => (
           <div key={idx} className="scheme-card">

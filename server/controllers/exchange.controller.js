@@ -122,7 +122,8 @@ exports.createExchangeRequest = async (req, res) => {
             requesterName: requester.name,
             requesterPhone: requester.phone,
             receiverName: receiver ? receiver.name : '',
-            receiverPhone: receiver ? receiver.phone : ''
+            receiverPhone: receiver ? receiver.phone : '',
+            category: req.body.category || 'Crops'
         });
 
         // Socket.IO notification
@@ -202,8 +203,7 @@ exports.getOpenExchanges = async (req, res) => {
         // Get all open pending exchanges, excluding your own
         const exchanges = await ExchangeRequest.find({
             isOpen: true,
-            status: 'pending',
-            requesterCustomID: { $ne: user.customID }
+            status: 'pending'
         }).sort({ createdAt: -1 });
 
         res.json({ success: true, count: exchanges.length, exchanges });

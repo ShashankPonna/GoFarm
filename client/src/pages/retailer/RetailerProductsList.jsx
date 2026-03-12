@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../components/BackButton';
 import { productsAPI } from '../../utils/api';
 import { useRealtimeProducts } from '../../hooks/useRealtimeProducts';
 import toast from 'react-hot-toast';
@@ -207,12 +208,9 @@ const RetailerProductsList = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 flex items-center justify-between text-white shadow-2xl">
           <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
+            <BackButton
               className="mr-4 hover:bg-white hover:bg-opacity-20 p-3 rounded-xl transition-all"
-            >
-              <i className="fas fa-arrow-left text-2xl"></i>
-            </button>
+            />
             <div>
               <h1 className="text-3xl font-bold flex items-center">
                 All Products from Farmers

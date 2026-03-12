@@ -16,7 +16,7 @@ const FarmerDashboard = () => {
 
     { icon: 'fa-seedling', title: t('dashboard.cropDiseaseDetection') || 'Crop Disease Detection', desc: t('dashboard.aiDetection') || 'AI-powered detection', link: '/farmer/disease-detection', color: 'green' },
     { icon: 'fa-robot', title: t('navigation.chatBot'), desc: t('dashboard.instantHelp') || 'Get instant help', link: '/farmer/chatbot', color: 'amber' },
-    { icon: 'fa-exchange-alt', title: 'Exchange', desc: 'Barter crops & equipment', link: '/farmer/exchange/new', color: 'blue' },
+    { icon: 'fa-exchange-alt', title: 'Exchange', desc: 'Barter crops & equipment', link: '/farmer/exchange', color: 'blue' },
     { icon: 'fa-leaf', title: 'Crop Recommendation', desc: 'Get best crop suggestions', link: '/farmer/crop-recommendation', color: 'green' },
     { icon: 'fa-users', title: 'Find Labour', desc: 'Post & find farm workers', link: '/farmer/find-labour', color: 'purple' },
 

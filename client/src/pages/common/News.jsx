@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import BackButton from '../../components/BackButton';
 
 const News = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -114,12 +115,9 @@ const News = () => {
         <div className="container mx-auto px-6 py-8 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button 
-                onClick={() => window.history.back()} 
+              <BackButton 
                 className="mr-5 hover:bg-white hover:bg-opacity-20 p-3 rounded-xl transition-all transform hover:scale-110 hover:-translate-x-1"
-              >
-                <i className="fas fa-arrow-left text-2xl"></i>
-              </button>
+              />
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold flex items-center mb-2">
                   <i className="fas fa-newspaper mr-4 animate-pulse"></i>

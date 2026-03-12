@@ -33,6 +33,12 @@ const exchangeRequestSchema = new mongoose.Schema({
         default: false,
         index: true
     },
+    category: {
+        type: String,
+        enum: ['Crops', 'Equipment', 'Seeds', 'Others'],
+        default: 'Crops',
+        index: true
+    },
 
     // What the requester offers
     offeredItem: {

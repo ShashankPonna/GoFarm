@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import BackButton from '../../components/BackButton';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([
@@ -57,9 +58,7 @@ const Wishlist = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Link to="/consumer/dashboard" className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-                <i className="fas fa-arrow-left text-xl"></i>
-              </Link>
+              <BackButton className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
               <div>
                 <h1 className="text-3xl font-bold flex items-center">
                   <i className="fas fa-heart mr-3"></i>

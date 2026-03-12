@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
+import BackButton from '../../components/BackButton';
 
 const Negotiation = () => {
   const navigate = useNavigate();
@@ -85,9 +86,7 @@ const Negotiation = () => {
         <div className="bg-gradient-to-r from-green-600 to-green-700 p-4 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button onClick={() => navigate(-1)} className="mr-3">
-                <i className="fas fa-arrow-left text-xl"></i>
-              </button>
+              <BackButton className="mr-3" />
               <div>
                 <h2 className="text-xl font-bold">Negotiations</h2>
                 <p className="text-sm text-green-200">Chat with retailers</p>

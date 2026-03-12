@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import BackButton from '../../components/BackButton';
 
 const FutureDemand = () => {
   const [crop, setCrop] = useState('wheat');
@@ -87,9 +88,7 @@ const FutureDemand = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
       <header className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 shadow-lg">
         <div className="flex items-center">
-          <button onClick={() => window.history.back()} className="mr-4">
-            <i className="fas fa-arrow-left text-xl"></i>
-          </button>
+          <BackButton className="mr-4" />
           <div>
             <h1 className="text-xl font-bold">Future Demand Predictor</h1>
             <p className="text-sm text-green-200">AI-powered crop demand forecasting</p>

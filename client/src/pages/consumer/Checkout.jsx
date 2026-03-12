@@ -4,6 +4,7 @@ import { useCartStore } from '../../store/cartStore';
 import { ordersAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -95,9 +96,7 @@ const Checkout = () => {
             {/* Header */}
             <header className="bg-gradient-to-r from-green-700 to-emerald-700 text-white py-4 px-6 shadow-lg">
                 <div className="max-w-5xl mx-auto flex items-center">
-                    <button onClick={() => navigate(-1)} className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-                        <i className="fas fa-arrow-left text-xl"></i>
-                    </button>
+                    <BackButton className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
                     <div>
                         <h1 className="text-2xl font-bold"><i className="fas fa-lock mr-2"></i>Secure Checkout</h1>
                         <p className="text-green-200 text-sm">Complete your order</p>

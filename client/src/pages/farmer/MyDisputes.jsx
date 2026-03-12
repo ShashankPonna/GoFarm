@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { disputeAPI, IMAGE_BASE_URL } from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const statusBadge = {
     open: { bg: 'bg-red-100', text: 'text-red-700', label: '🔴 Open' },
@@ -72,8 +73,10 @@ const MyDisputes = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-red-50 pb-24">
             <header className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-6 px-6 shadow-lg">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div>
+                <div className="container mx-auto">
+                    <BackButton className="mb-4" />
+                    <div className="flex items-center justify-between">
+                        <div>
                         <h1 className="text-2xl font-bold">⚖️ My Disputes</h1>
                         <p className="text-red-100 text-sm">{disputes.length} dispute(s)</p>
                     </div>
@@ -82,7 +85,8 @@ const MyDisputes = () => {
                         {showForm ? '✕ Close' : '🚨 Raise Complaint'}
                     </button>
                 </div>
-            </header>
+            </div>
+        </header>
 
             <div className="container mx-auto px-4 py-6 max-w-xl">
                 {/* Raise Complaint Form */}

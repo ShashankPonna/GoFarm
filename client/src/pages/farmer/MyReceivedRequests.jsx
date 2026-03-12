@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { exchangeAPI } from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const statusBadge = {
     pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '⏳ Pending' },
@@ -106,8 +107,10 @@ const MyReceivedRequests = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 pb-24">
             <header className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-6 px-6 shadow-lg">
-                <div className="container mx-auto flex items-center justify-between">
-                    <div>
+                <div className="container mx-auto">
+                    <BackButton className="mb-4" />
+                    <div className="flex items-center justify-between">
+                        <div>
                         <h1 className="text-2xl font-bold">📥 Incoming Exchanges</h1>
                         <p className="text-green-100 text-sm">{exchanges.length} request(s)</p>
                     </div>
@@ -117,7 +120,8 @@ const MyReceivedRequests = () => {
                         <Link to="/farmer/exchange/new" className="bg-white text-teal-700 px-3 py-2 rounded-lg font-semibold hover:bg-teal-50">+ New</Link>
                     </div>
                 </div>
-            </header>
+            </div>
+        </header>
 
             <div className="container mx-auto px-4 py-6 max-w-xl">
                 {exchanges.length === 0 ? (

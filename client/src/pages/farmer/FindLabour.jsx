@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { farmWorkAPI, cropsAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const WORK_TYPES = ['Harvesting', 'Sowing', 'Irrigation', 'Weeding', 'Ploughing', 'Spraying', 'Transplanting', 'Threshing', 'Loading/Unloading', 'Other'];
 
@@ -363,9 +364,7 @@ const FindLabour = () => {
                 <div className="max-w-2xl mx-auto px-4 py-3">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <Link to="/farmer/dashboard" className="text-green-600 hover:text-green-700">
-                                <i className="fas fa-arrow-left text-lg"></i>
-                            </Link>
+                            <BackButton className="mr-0" />
                             <h1 className="text-xl font-bold text-gray-800">👷 Find Labour</h1>
                         </div>
                     </div>

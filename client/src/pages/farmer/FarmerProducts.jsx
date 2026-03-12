@@ -3,6 +3,7 @@ import Papa from '../../libs/papaparse.js';
 import { productsAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../context/SocketContext';
+import BackButton from '../../components/BackButton';
 
 const FarmerProducts = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -475,9 +476,7 @@ const FarmerProducts = () => {
       <header className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button onClick={() => window.history.back()} className="mr-4">
-              <i className="fas fa-arrow-left text-xl"></i>
-            </button>
+            <BackButton className="mr-4" />
             <div>
               <h1 className="text-xl font-bold">My Products</h1>
               <p className="text-sm text-green-200">Manage your farm products</p>

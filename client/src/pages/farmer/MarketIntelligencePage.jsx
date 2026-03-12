@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BackButton from '../../components/BackButton';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { API_URL } from '../../utils/api';
 
@@ -96,9 +97,7 @@ const MarketIntelligencePage = () => {
             {/* Header */}
             <header className="bg-gradient-to-r from-green-700 via-emerald-700 to-teal-700 text-white p-4 shadow-xl">
                 <div className="container mx-auto flex items-center">
-                    <button onClick={() => window.history.back()} className="mr-4 hover:bg-white/20 p-2 rounded-full transition">
-                        <i className="fas fa-arrow-left text-xl"></i>
-                    </button>
+                    <BackButton className="mr-4" bgColor="hover:bg-white/20" />
                     <div className="flex-1">
                         <h1 className="text-xl font-bold flex items-center gap-2">
                             <i className="fas fa-chart-line"></i> Market Intelligence

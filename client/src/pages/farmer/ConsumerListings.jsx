@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { productsAPI, IMAGE_BASE_URL } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import BackButton from '../../components/BackButton';
 
 const ConsumerListings = () => {
   const { t } = useTranslation();
@@ -164,9 +165,7 @@ const ConsumerListings = () => {
       <header className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button onClick={() => window.history.back()} className="mr-4">
-              <i className="fas fa-arrow-left text-xl"></i>
-            </button>
+            <BackButton className="mr-4" />
             <div>
               <h1 className="text-xl font-bold">🛒 {t('consumerListings.title')}</h1>
               <p className="text-sm text-purple-200">{t('consumerListings.subtitle')}</p>

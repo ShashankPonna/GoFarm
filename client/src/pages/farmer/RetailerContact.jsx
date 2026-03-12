@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { connectionsAPI } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
+import BackButton from '../../components/BackButton';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -83,9 +84,7 @@ const RetailerContact = () => {
       <header className="bg-gradient-to-r from-green-800 to-green-600 text-white py-4 px-6 shadow-lg">
         <div className="max-w-6xl mx-auto flex flex-wrap gap-3 justify-between items-center">
           <div className="flex items-center space-x-3">
-            <button onClick={() => window.history.back()} className="mr-1 hover:opacity-80">
-              <i className="fas fa-arrow-left text-xl"></i>
-            </button>
+            <BackButton className="mr-1 hover:opacity-80" />
             <i className="fas fa-store text-2xl text-green-200"></i>
             <h1 className="text-2xl font-bold">Retailer Contacts</h1>
           </div>

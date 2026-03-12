@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import api, { IMAGE_BASE_URL } from '../../utils/api';
+import BackButton from '../../components/BackButton';
 
 const ConsumerShop = () => {
   const { t } = useTranslation();
@@ -191,10 +192,13 @@ const ConsumerShop = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
       {/* Navigation */}
       <nav className="bg-white shadow-lg sticky top-0 z-40 px-6 py-4 flex justify-between items-center">
-        <Link to="/consumer/dashboard" className="text-3xl font-bold hover:opacity-80 transition">
-          <span className="text-green-600">🌾 GO</span>
-          <span className="text-yellow-600">FaRm</span>
-        </Link>
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <Link to="/consumer/dashboard" className="text-3xl font-bold hover:opacity-80 transition">
+            <span className="text-green-600">🌾 GO</span>
+            <span className="text-yellow-600">FaRm</span>
+          </Link>
+        </div>
         <div className="relative w-1/3">
           <input
             type="text"

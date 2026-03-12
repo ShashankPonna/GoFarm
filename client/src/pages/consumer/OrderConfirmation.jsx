@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import BackButton from '../../components/BackButton';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { ordersAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -107,9 +108,7 @@ const OrderConfirmation = () => {
             <header className="bg-gradient-to-r from-green-700 to-emerald-700 text-white py-4 px-6 shadow-lg print:hidden">
                 <div className="max-w-4xl mx-auto flex items-center justify-between">
                     <div className="flex items-center">
-                        <button onClick={() => navigate('/orders')} className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition">
-                            <i className="fas fa-arrow-left text-xl"></i>
-                        </button>
+                        <BackButton to="/orders" className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition" />
                         <h1 className="text-xl font-bold">Order Confirmation</h1>
                     </div>
                     <button

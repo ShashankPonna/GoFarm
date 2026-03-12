@@ -13,14 +13,6 @@ const MoreTab = () => {
             link: '/farmer/schemes',
         },
         {
-            label: 'Community',
-            desc: 'Posts & discussions',
-            icon: 'fa-users',
-            iconBg: '#f5f3ff',
-            iconColor: '#7c3aed',
-            link: '/farmer/community',
-        },
-        {
             label: 'Disease Detection',
             desc: 'AI crop health scanner',
             icon: 'fa-microscope',
