@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-
+import axios from 'axios';
 const ChatBot = () => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState([
@@ -32,88 +32,61 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (inputMessage.trim()) {
-      const userMessage = { 
-        type: 'user', 
-        text: inputMessage, 
-        timestamp: new Date() 
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-      setInputMessage('');
-      setIsTyping(true);
-      setShowQuickQuestions(false);
-      
-      // Simulate bot typing delay
-      setTimeout(() => {
-        const botResponse = getBotResponse(inputMessage);
-        const botMessage = { 
-          type: 'bot', 
-          text: botResponse, 
-          timestamp: new Date() 
-        };
-        setMessages(prev => [...prev, botMessage]);
-        setIsTyping(false);
-      }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5s
-    }
-  };
-
-  const getBotResponse = (message) => {
-    const responses = {
-      'crops': '🌾 Based on current season and market trends, I recommend:\n\n• **Tomatoes** - High demand, ₹35-40/kg\n• **Potatoes** - Stable market, ₹25-30/kg\n• **Wheat** - Government procurement available\n• **Onions** - Good export potential\n\nConsider your soil type and local climate for best results!',
-      
-      'disease': '🛡️ **Disease Prevention Strategy:**\n\n✅ **Prevention:**\n• Use certified disease-resistant seeds\n• Maintain 2-3 feet spacing between plants\n• Rotate crops every season\n• Remove infected plants immediately\n\n✅ **Treatment:**\n• Neem oil spray (organic)\n• Copper fungicide for fungal diseases\n• Regular monitoring twice a week',
-      
-      'fertilizer': '🧪 **Fertilizer Recommendations:**\n\n🌱 **For Vegetables:**\n• **Base:** NPK 10:26:26 (50kg/acre)\n• **Growth:** Urea (25kg/acre after 30 days)\n• **Flowering:** DAP (20kg/acre)\n\n🌿 **Organic Options:**\n• Vermicompost (2 tons/acre)\n• Cow dung manure (5 tons/acre)\n• Bone meal for phosphorus',
-      
-      'weather': '🌤️ **Weather Update:**\n\n📊 **This Week:**\n• Temperature: 25-32°C\n• Humidity: 65-75%\n• Rainfall: 15-20mm expected\n• Wind: Light to moderate\n\n🌱 **Farming Advice:**\n• Perfect for transplanting\n• Good for irrigation\n• Avoid pesticide spraying during rain',
-      
-      'price': '💰 **Current Market Prices:**\n\n🥬 **Vegetables:**\n• Tomato: ₹30-35/kg ⬆️\n• Potato: ₹22-28/kg ➡️\n• Onion: ₹25-30/kg ⬆️\n• Cabbage: ₹15-20/kg ➡️\n\n🌾 **Grains:**\n• Wheat: ₹2,200-2,400/quintal\n• Rice: ₹2,800-3,200/quintal\n\n*Prices updated today*',
-      
-      'scheme': '🏛️ **Government Schemes for Farmers:**\n\n💰 **Financial Support:**\n• **PM-KISAN:** ₹6,000/year direct transfer\n• **Crop Insurance:** Up to 90% premium subsidy\n• **KCC:** Low interest farm loans\n\n🌱 **Development Schemes:**\n• **Soil Health Card:** Free soil testing\n• **Organic Farming:** 50% subsidy on inputs\n• **Drip Irrigation:** 55% subsidy\n\nVisit your nearest agriculture office or call 1800-180-1551'
-    };
-    
-    const lowerMessage = message.toLowerCase();
-    for (let key in responses) {
-      if (lowerMessage.includes(key)) {
-        return responses[key];
-      }
-    }
-    
-    // Smart responses based on keywords
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-      return '👋 Hello there! I\'m excited to help you with your farming questions. What would you like to know about today?';
-    }
-    
-    if (lowerMessage.includes('thank')) {
-      return '🙏 You\'re very welcome! I\'m always here to help. Feel free to ask me anything about farming, crops, or agriculture. Happy farming! 🌱';
-    }
-    
-    return '🤔 That\'s an interesting question! While I don\'t have specific information about that right now, I recommend:\n\n• Consulting your local Krishi Vigyan Kendra\n• Contacting agriculture extension officer\n• Visiting government agriculture portal\n\nIs there anything else about crops, diseases, fertilizers, or schemes I can help you with?';
-  };
-
-  const handleQuickQuestion = (question) => {
+  const sendMessageToAI = async (messageText) => {
     const userMessage = { 
       type: 'user', 
-      text: question.text, 
+      text: messageText, 
       timestamp: new Date() 
     };
     
     setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
     setIsTyping(true);
     setShowQuickQuestions(false);
     
-    setTimeout(() => {
-      const botResponse = getBotResponse(question.text);
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const response = await axios.post(`${API_URL}/chatbot/message`, {
+        message: messageText,
+        conversationHistory: messages.slice(-10)
+      });
+      
+      let botText;
+      if (response.data.success) {
+        botText = response.data.response;
+      } else {
+        botText = response.data.fallbackResponse || 'Sorry, I could not process your request.';
+      }
+      
       const botMessage = { 
         type: 'bot', 
-        text: botResponse, 
+        text: botText, 
         timestamp: new Date() 
       };
       setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Chatbot error:', error);
+      const errorText = error.response?.data?.fallbackResponse || 
+        '🤖 I\'m having trouble connecting right now. Please try again in a moment!';
+      const botMessage = { 
+        type: 'bot', 
+        text: errorText, 
+        timestamp: new Date() 
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (inputMessage.trim() && !isTyping) {
+      sendMessageToAI(inputMessage.trim());
+    }
+  };
+
+  const handleQuickQuestion = (question) => {
+    sendMessageToAI(question.text);
   };
 
   const formatTime = (timestamp) => {

@@ -35,6 +35,7 @@ const exchangeRoutes = require('./routes/exchange.routes');
 const disputeRoutes = require('./routes/dispute.routes');
 const marketIntelligenceRoutes = require('./routes/marketIntelligence.routes');
 const farmWorkRoutes = require('./routes/farmWork.routes');
+const chatbotRoutes = require('./routes/chatbot.routes');
 const { startMandiCronJob } = require('./utils/mandiCronJob');
 
 const app = express();
@@ -148,6 +149,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/posts', postRoutes);
 
 app.use('/api/wishlist', wishlistRoutes);

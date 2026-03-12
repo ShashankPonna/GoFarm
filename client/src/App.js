@@ -17,7 +17,6 @@ import CropManagement from './pages/farmer/CropManagement';
 import DiseaseDetection from './pages/DiseaseDetection';
 import CropRecommendation from './pages/farmer/CropRecommendation';
 import WeatherForecast from './pages/farmer/WeatherForecast';
-import WasteManagement from './pages/farmer/WasteManagement';
 import ChatBot from './pages/farmer/ChatBot';
 import Posts from './pages/common/Posts';
 import MarketIntelligencePage from './pages/farmer/MarketIntelligencePage';
@@ -40,7 +39,6 @@ import RetailerProducts from './pages/retailer/RetailerProducts';
 import RetailerInventory from './pages/retailer/RetailerInventory';
 import RetailerOptions from './pages/retailer/RetailerOptions';
 import RetailerProductsList from './pages/retailer/RetailerProductsList';
-import RetailerWasteProducts from './pages/retailer/RetailerWasteProducts';
 import RetailerChatBot from './pages/retailer/ChatBot';
 import RetailerConsumerListings from './pages/retailer/RetailerConsumerListings';
 
@@ -62,7 +60,6 @@ import Profile from './pages/common/Profile';
 import Chat from './pages/common/Chat';
 
 import Orders from './pages/common/Orders';
-import ReportSection from './pages/common/ReportSection';
 import MarketPrices from './pages/common/MarketPrices';
 import GovtSchemes from './pages/common/GovtSchemes';
 import News from './pages/common/News';
@@ -162,11 +159,7 @@ function App() {
                   <WeatherForecast />
                 </ProtectedRoute>
               } />
-              <Route path="/farmer/waste" element={
-                <ProtectedRoute allowedRoles={['farmer']}>
-                  <WasteManagement />
-                </ProtectedRoute>
-              } />
+
               <Route path="/farmer/chatbot" element={
                 <ProtectedRoute allowedRoles={['farmer']}>
                   <ChatBot />
@@ -259,11 +252,7 @@ function App() {
                   <RetailerProductsList />
                 </ProtectedRoute>
               } />
-              <Route path="/retailer/waste-products" element={
-                <ProtectedRoute allowedRoles={['retailer']}>
-                  <RetailerWasteProducts />
-                </ProtectedRoute>
-              } />
+
               <Route path="/retailer/farmers" element={
                 <ProtectedRoute allowedRoles={['retailer']}>
                   <FarmerContact />
@@ -373,11 +362,7 @@ function App() {
                   <Orders />
                 </ProtectedRoute>
               } />
-              <Route path="/report" element={
-                <ProtectedRoute>
-                  <ReportSection />
-                </ProtectedRoute>
-              } />
+
               <Route path="/market-prices" element={
                 <ProtectedRoute>
                   <MarketPrices />

@@ -3,22 +3,7 @@ import { Link } from 'react-router-dom';
 
 const MoreTab = () => {
     const menuItems = [
-        {
-            label: 'Waste Management',
-            desc: 'Sustainable waste solutions',
-            icon: 'fa-recycle',
-            iconBg: '#ecfdf5',
-            iconColor: '#059669',
-            link: '/farmer/waste',
-        },
-        {
-            label: 'Reports',
-            desc: 'Submit & view reports',
-            icon: 'fa-file-alt',
-            iconBg: '#eff6ff',
-            iconColor: '#2563eb',
-            link: '/report',
-        },
+
         {
             label: 'Government Schemes',
             desc: 'Subsidies & benefits',

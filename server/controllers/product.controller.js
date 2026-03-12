@@ -351,3 +351,47 @@ exports.addReview = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Bulk create products from CSV data
+// @route   POST /api/products/bulk
+// @access  Private (Farmer and Retailer)
+exports.bulkCreateProducts = async (req, res, next) => {
+  try {
+    const { products } = req.body;
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide an array of products'
+      });
+    }
+
+    console.log(`📦 Bulk creating ${products.length} products for user:`, req.user._id);
+
+    // Add seller to each product and validate
+    const productsWithSeller = products.map(p => ({
+      name: p.name,
+      category: p.category || 'other',
+      price: Number(p.price) || 0,
+      unit: p.unit || 'kg',
+      quantity: Number(p.quantity) || 0,
+      description: p.description || '',
+      organic: p.organic === 'true' || p.organic === true,
+      seller: req.user._id
+    }));
+
+    const createdProducts = await Product.insertMany(productsWithSeller, { ordered: false });
+
+    console.log(`✅ Bulk created ${createdProducts.length} products`);
+
+    res.status(201).json({
+      success: true,
+      message: `${createdProducts.length} products created successfully`,
+      count: createdProducts.length,
+      products: createdProducts
+    });
+  } catch (error) {
+    console.error('❌ Error bulk creating products:', error.message);
+    next(error);
+  }
+};

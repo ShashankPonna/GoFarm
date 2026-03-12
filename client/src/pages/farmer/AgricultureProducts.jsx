@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import Papa from 'papaparse';
 import { productsAPI, IMAGE_BASE_URL } from '../../utils/api';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../context/SocketContext';
@@ -17,7 +18,10 @@ const AgricultureProducts = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newProduct, setNewProduct] = useState({
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showCsvModal, setShowCsvModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const emptyProduct = {
     name: '',
     description: '',
     category: 'vegetables',
@@ -26,13 +30,22 @@ const AgricultureProducts = () => {
     quantity: '',
     organic: false,
     certified: false
-  });
+  };
+  const [newProduct, setNewProduct] = useState(emptyProduct);
 
   const [selectedImages, setSelectedImages] = useState([]);
   const [selectedVideos, setSelectedVideos] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [videoPreviews, setVideoPreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
+
+  // CSV state
+  const [csvData, setCsvData] = useState([]);
+  const [csvFileName, setCsvFileName] = useState('');
+  const [csvUploading, setCsvUploading] = useState(false);
+
+  const validCategories = ['vegetables', 'fruits', 'millets', 'cereals', 'pulses', 'spices', 'dairy', 'edible-oil', 'waste', 'other'];
+  const validUnits = ['kg', 'quintal', 'ton', 'liter', 'piece', 'dozen'];
 
   const categories = [
     t('common.all') || 'All',
@@ -180,8 +193,112 @@ const AgricultureProducts = () => {
   };
 
   const handleEditProduct = (product) => {
-    toast.success(`Edit functionality for "${product.name}" - Coming soon!`);
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name || '',
+      description: product.description || '',
+      category: product.category || 'vegetables',
+      price: product.price || '',
+      unit: product.unit || 'kg',
+      quantity: product.quantity || '',
+      organic: product.organic || false,
+      certified: product.certified || false
+    });
+    setSelectedImages([]);
+    setSelectedVideos([]);
+    setImagePreviews([]);
+    setVideoPreviews([]);
+    setShowEditForm(true);
   };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    if (!newProduct.name || !newProduct.price || !newProduct.quantity) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('name', newProduct.name);
+      formData.append('description', newProduct.description);
+      formData.append('category', newProduct.category);
+      formData.append('price', parseFloat(newProduct.price));
+      formData.append('unit', newProduct.unit);
+      formData.append('quantity', parseInt(newProduct.quantity));
+      formData.append('organic', newProduct.organic);
+      formData.append('certified', newProduct.certified);
+
+      if (selectedImages.length > 0) {
+        selectedImages.forEach((image) => formData.append('images', image));
+      }
+      if (selectedVideos.length > 0) {
+        selectedVideos.forEach((video) => formData.append('videos', video));
+      }
+
+      await productsAPI.update(editingProduct._id, formData);
+      setShowEditForm(false);
+      setEditingProduct(null);
+      setNewProduct(emptyProduct);
+      setSelectedImages([]);
+      setSelectedVideos([]);
+      setImagePreviews([]);
+      setVideoPreviews([]);
+      toast.success('Product updated successfully!');
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast.error('Failed to update product');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ======== CSV UPLOAD ========
+  const handleCsvFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCsvFileName(file.name);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const cleaned = results.data
+          .filter(row => row.name && row.name.trim())
+          .map(row => ({
+            name: row.name?.trim() || '',
+            category: validCategories.includes(row.category?.trim().toLowerCase()) ? row.category.trim().toLowerCase() : 'other',
+            price: row.price || '0',
+            unit: validUnits.includes(row.unit?.trim().toLowerCase()) ? row.unit.trim().toLowerCase() : 'kg',
+            quantity: row.quantity || '0',
+            description: row.description?.trim() || ''
+          }));
+        setCsvData(cleaned);
+      },
+      error: () => toast.error('Failed to parse CSV file.')
+    });
+  };
+
+  const handleCsvUpload = async () => {
+    if (csvData.length === 0) { toast.error('No products to upload.'); return; }
+    try {
+      setCsvUploading(true);
+      const response = await productsAPI.bulkCreate(csvData);
+      toast.success(`${response.data.count} products added!`);
+      setShowCsvModal(false);
+      setCsvData([]);
+      setCsvFileName('');
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error bulk uploading:', error);
+      toast.error('Failed to upload products.');
+    } finally {
+      setCsvUploading(false);
+    }
+  };
+
+  const removeCsvRow = (index) => setCsvData(prev => prev.filter((_, i) => i !== index));
 
   // Handle image selection
   const handleImageChange = (e) => {
@@ -384,7 +501,15 @@ const AgricultureProducts = () => {
             </button>
 
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => { setShowCsvModal(true); setCsvData([]); setCsvFileName(''); }}
+              className="bg-purple-500 hover:bg-purple-600 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer text-sm"
+            >
+              <i className="fas fa-file-csv mr-1"></i>
+              Upload CSV
+            </button>
+
+            <button
+              onClick={() => { setNewProduct(emptyProduct); setSelectedImages([]); setSelectedVideos([]); setImagePreviews([]); setVideoPreviews([]); setShowAddForm(true); }}
               className="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer"
             >
               <i className="fas fa-plus mr-2"></i>
@@ -828,6 +953,232 @@ const AgricultureProducts = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================== EDIT PRODUCT MODAL =================== */}
+      {showEditForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  <i className="fas fa-edit text-blue-600 mr-2"></i>Edit Product
+                </h2>
+                <button onClick={() => { setShowEditForm(false); setEditingProduct(null); setNewProduct(emptyProduct); }} className="text-gray-500 hover:text-gray-700">
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateProduct} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Name <span className="text-red-500">*</span></label>
+                  <input type="text" value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g., Fresh Tomatoes" required />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select value={newProduct.category}
+                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <option value="vegetables">Vegetables</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="grains-pulses-spices">Grains, Pulses & Spices</option>
+                    <option value="millets">Millets</option>
+                    <option value="cereals">Cereals</option>
+                    <option value="pulses">Pulses</option>
+                    <option value="spices">Spices</option>
+                    <option value="dairy">Dairy</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price <span className="text-red-500">*</span></label>
+                    <input type="number" value={newProduct.price}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="₹" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                    <select value={newProduct.unit}
+                      onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                      <option value="kg">kg</option>
+                      <option value="quintal">Quintal</option>
+                      <option value="ton">Ton</option>
+                      <option value="liter">Liter</option>
+                      <option value="piece">Piece</option>
+                      <option value="dozen">Dozen</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantity <span className="text-red-500">*</span></label>
+                  <input type="number" value={newProduct.quantity}
+                    onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Available quantity" required />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea value={newProduct.description}
+                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-vertical"
+                    rows="3" placeholder="Product description..." />
+                </div>
+
+                {/* Show existing images */}
+                {editingProduct?.images?.length > 0 && selectedImages.length === 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Current Images</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {editingProduct.images.map((img, idx) => (
+                        <img key={idx} src={img.url?.startsWith('http') ? img.url : `${IMAGE_BASE_URL}${img.url}`}
+                          alt={`Current ${idx + 1}`} className="w-full h-20 object-cover rounded-lg border" />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Upload new images below to replace these.</p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <i className="fas fa-images mr-2 text-blue-600"></i>Replace Images (optional)
+                  </label>
+                  <input type="file" accept="image/*" multiple onChange={handleImageChange}
+                    className="w-full border-2 border-dashed border-gray-300 p-3 rounded-lg cursor-pointer hover:border-green-500 text-sm" />
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative">
+                          <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-20 object-cover rounded-lg" />
+                          <button type="button" onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 text-xs">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input type="checkbox" checked={newProduct.organic}
+                      onChange={(e) => setNewProduct({ ...newProduct, organic: e.target.checked })} className="mr-2 w-4 h-4" />
+                    <span className="text-sm text-gray-700"><i className="fas fa-leaf text-green-600 mr-1"></i>Organic</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input type="checkbox" checked={newProduct.certified}
+                      onChange={(e) => setNewProduct({ ...newProduct, certified: e.target.checked })} className="mr-2 w-4 h-4" />
+                    <span className="text-sm text-gray-700"><i className="fas fa-certificate text-blue-600 mr-1"></i>Certified</span>
+                  </label>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button type="button" onClick={() => { setShowEditForm(false); setEditingProduct(null); setNewProduct(emptyProduct); }}
+                    className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                  <button type="submit" disabled={uploading}
+                    className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center">
+                    {uploading ? (<><i className="fas fa-spinner fa-spin mr-2"></i>Saving...</>) : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================== CSV UPLOAD MODAL =================== */}
+      {showCsvModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  <i className="fas fa-file-csv text-green-600 mr-2"></i>Upload Products from CSV
+                </h2>
+                <button onClick={() => { setShowCsvModal(false); setCsvData([]); setCsvFileName(''); }} className="text-gray-500 hover:text-gray-700">
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800 font-medium mb-2"><i className="fas fa-info-circle mr-1"></i> CSV Format:</p>
+                <code className="text-xs bg-blue-100 px-2 py-1 rounded block text-blue-900">
+                  name, category, price, unit, quantity, description
+                </code>
+                <p className="text-xs text-blue-700 mt-2">
+                  <b>Categories:</b> vegetables, fruits, millets, cereals, pulses, spices, dairy, edible-oil, waste, other<br />
+                  <b>Units:</b> kg, quintal, ton, liter, piece, dozen
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select CSV File</label>
+                <input type="file" accept=".csv" onChange={handleCsvFileChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" />
+                {csvFileName && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    <i className="fas fa-file mr-1"></i> {csvFileName} — {csvData.length} product{csvData.length !== 1 ? 's' : ''} found
+                  </p>
+                )}
+              </div>
+
+              {csvData.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-bold text-gray-700 mb-2">Preview ({csvData.length} products)</h3>
+                  <div className="overflow-x-auto border rounded-lg">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">#</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">Name</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">Category</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">Price</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">Unit</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-600">Qty</th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvData.map((row, idx) => (
+                          <tr key={idx} className="border-t hover:bg-gray-50">
+                            <td className="px-3 py-2 text-gray-500">{idx + 1}</td>
+                            <td className="px-3 py-2 font-medium">{row.name}</td>
+                            <td className="px-3 py-2 capitalize">{row.category}</td>
+                            <td className="px-3 py-2">₹{row.price}</td>
+                            <td className="px-3 py-2">{row.unit}</td>
+                            <td className="px-3 py-2">{row.quantity}</td>
+                            <td className="px-3 py-2 text-center">
+                              <button onClick={() => removeCsvRow(idx)} className="text-red-500 hover:text-red-700" title="Remove">
+                                <i className="fas fa-trash-alt"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => { setShowCsvModal(false); setCsvData([]); setCsvFileName(''); }}
+                  className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                <button onClick={handleCsvUpload} disabled={csvData.length === 0 || csvUploading}
+                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                  {csvUploading ? (<><i className="fas fa-spinner fa-spin mr-2"></i>Uploading...</>) : (<><i className="fas fa-cloud-upload-alt mr-2"></i>Add {csvData.length} Product{csvData.length !== 1 ? 's' : ''}</>)}
+                </button>
+              </div>
             </div>
           </div>
         </div>

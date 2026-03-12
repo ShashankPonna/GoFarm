@@ -85,8 +85,16 @@ export const productsAPI = {
     }
     return api.post('/products', data);
   },
-  update: (id, data) => api.put(`/products/${id}`, data),
+  update: (id, data) => {
+    if (data instanceof FormData) {
+      return api.put(`/products/${id}`, data, {
+        headers: { 'Content-Type': undefined }
+      });
+    }
+    return api.put(`/products/${id}`, data);
+  },
   delete: (id) => api.delete(`/products/${id}`),
+  bulkCreate: (products) => api.post('/products/bulk', { products }),
   addReview: (id, data) => api.post(`/products/${id}/review`, data),
   search: (query) => api.get('/products/search', { params: { q: query } }),
 };

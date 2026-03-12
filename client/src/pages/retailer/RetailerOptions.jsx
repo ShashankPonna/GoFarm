@@ -43,13 +43,7 @@ const RetailerOptions = () => {
       color: 'green',
       link: '/retailer/products-list'
     },
-    {
-      name: t('retailer.wasteProducts'),
-      subtitle: t('categories.oilsVegetables'),
-      icon: 'fa-leaf',
-      color: 'amber',
-      link: '/retailer/waste-products'
-    },
+
     {
       name: t('retailer.farmerContact'),
       subtitle: t('retailer.connectFarmers'),
@@ -78,13 +72,7 @@ const RetailerOptions = () => {
       color: 'purple',
       link: '/retailer/consumer-listings'
     },
-    {
-      name: t('retailer.reportSection'),
-      subtitle: t('retailer.submitReports'),
-      icon: 'fa-file-alt',
-      color: 'green',
-      link: '/report'
-    },
+
     {
       name: t('retailer.posts'),
       subtitle: t('retailer.shareConnect'),

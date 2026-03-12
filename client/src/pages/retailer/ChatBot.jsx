@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-
+import axios from 'axios';
 const ChatBot = () => {
   const [messages, setMessages] = useState([
     { 
@@ -19,58 +19,44 @@ const ChatBot = () => {
     { text: 'Bulk order discounts', icon: '📊', category: 'bulk' },
     { text: 'Quality control guidelines', icon: '✅', category: 'quality' }
   ];
+  const [isTyping, setIsTyping] = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const sendMessageToAI = async (messageText) => {
+    const userMessage = { type: 'user', text: messageText, timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
+
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const response = await axios.post(`${API_URL}/chatbot/message`, {
+        message: messageText,
+        conversationHistory: messages.slice(-10)
+      });
+
+      const botText = response.data.success
+        ? response.data.response
+        : response.data.fallbackResponse || 'Sorry, I could not process your request.';
+
+      setMessages(prev => [...prev, { type: 'bot', text: botText, timestamp: new Date() }]);
+    } catch (error) {
+      console.error('Chatbot error:', error);
+      const errorText = error.response?.data?.fallbackResponse ||
+        '🤖 I\'m having trouble connecting right now. Please try again!';
+      setMessages(prev => [...prev, { type: 'bot', text: errorText, timestamp: new Date() }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const handleSendMessage = () => {
-    if (inputMessage.trim()) {
-      setMessages([...messages, { type: 'user', text: inputMessage }]);
-      
-      setTimeout(() => {
-        const botResponse = getBotResponse(inputMessage);
-        setMessages(prev => [...prev, { type: 'bot', text: botResponse }]);
-      }, 1000);
-      
-      setInputMessage('');
+    if (inputMessage.trim() && !isTyping) {
+      sendMessageToAI(inputMessage.trim());
     }
-  };
-
-  const getBotResponse = (message) => {
-    const responses = {
-      'source': 'To source products from farmers: 1) Visit "Farmer Contact" section 2) Browse by product category 3) Check farmer ratings and verification 4) Contact directly via phone 5) Negotiate prices and delivery terms',
-      'inventory': 'Inventory tips: 1) Use FIFO method for perishables 2) Maintain optimal stock levels 3) Track expiry dates 4) Regular quality checks 5) Use our inventory management tools',
-      'selling': 'Top selling products: Vegetables (40%), Fruits (25%), Grains (20%), Pulses (10%), Spices (5%). Focus on seasonal produce for better margins.',
-      'pricing': 'Pricing strategy: 1) Check market rates daily 2) Add 15-25% margin 3) Offer bundle deals 4) Seasonal discounts 5) Loyalty programs for regular customers',
-      'bulk': 'Bulk order benefits: 10% off on orders above ₹10,000, 15% off above ₹25,000, 20% off above ₹50,000. Free delivery on bulk orders. Contact farmers directly for best rates.',
-      'quality': 'Quality control: 1) Inspect products on arrival 2) Check for freshness and damage 3) Proper storage conditions 4) Regular temperature monitoring 5) First-in-first-out rotation',
-      'payment': 'Payment options: We support UPI, Net Banking, Credit/Debit Cards, and Cash on Delivery. For bulk orders, we offer credit terms up to 30 days for verified retailers.',
-      'delivery': 'Delivery options: Standard (2-3 days), Express (1 day), Same-day (in select cities). Track your orders in real-time through the Orders section.',
-      'waste': 'Waste management: List unsold products in "Waste Products" section at discounted rates. Connect with food processing units or composting facilities.',
-      'license': 'Required licenses: FSSAI registration, GST registration, Trade license, Shop establishment license. We can help you with documentation.'
-    };
-    
-    const lowerMessage = message.toLowerCase();
-    for (let key in responses) {
-      if (lowerMessage.includes(key)) {
-        return responses[key];
-      }
-    }
-    
-    return 'Thank you for your question! Our business support team is here to help. For detailed assistance, please contact our retail support at 1800-XXX-RETAIL or email retail@farmconnect.com';
   };
 
   const handleQuickQuestion = (question) => {
-    setMessages([...messages, { type: 'user', text: question }]);
-    setTimeout(() => {
-      const botResponse = getBotResponse(question);
-      setMessages(prev => [...prev, { type: 'bot', text: botResponse }]);
-    }, 1000);
+    sendMessageToAI(typeof question === 'object' ? question.text : question);
   };
 
   return (

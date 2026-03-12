@@ -13,13 +13,13 @@ const FarmerDashboard = () => {
 
   const farmManagementItems = [
     { icon: 'fa-carrot', title: t('navigation.products'), desc: t('dashboard.manageItems') || 'Manage your items', link: '/farmer/products', color: 'green' },
-    { icon: 'fa-recycle', title: t('navigation.wasteManagement'), desc: t('dashboard.sustainableSolutions') || 'Sustainable solutions', link: '/farmer/waste', color: 'amber' },
+
     { icon: 'fa-seedling', title: t('dashboard.cropDiseaseDetection') || 'Crop Disease Detection', desc: t('dashboard.aiDetection') || 'AI-powered detection', link: '/farmer/disease-detection', color: 'green' },
     { icon: 'fa-robot', title: t('navigation.chatBot'), desc: t('dashboard.instantHelp') || 'Get instant help', link: '/farmer/chatbot', color: 'amber' },
     { icon: 'fa-exchange-alt', title: 'Exchange', desc: 'Barter crops & equipment', link: '/farmer/exchange/new', color: 'blue' },
     { icon: 'fa-leaf', title: 'Crop Recommendation', desc: 'Get best crop suggestions', link: '/farmer/crop-recommendation', color: 'green' },
     { icon: 'fa-users', title: 'Find Labour', desc: 'Post & find farm workers', link: '/farmer/find-labour', color: 'purple' },
-    { icon: 'fa-file-alt', title: t('dashboard.reportSection') || 'Report Section', desc: t('dashboard.submitReports') || 'Submit reports', link: '/report', color: 'green' },
+
   ];
 
   const marketGrowthItems = [
