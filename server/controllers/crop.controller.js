@@ -1,5 +1,6 @@
 const Crop = require('../models/Crop.model');
 const { getGroqRecommendations, getCropSpecificAdvice, getSoilImprovementPlan } = require('../utils/groqCropRecommendation');
+const { predictCropYield } = require('../utils/groqYieldPrediction');
 
 exports.createCrop = async (req, res) => {
   try {
@@ -219,3 +220,35 @@ exports.getSoilPlan = async (req, res) => {
 };
 
 
+
+/**
+ * Predict crop yield using Groq AI
+ * POST /api/crops/yield-prediction
+ */
+exports.predictYield = async (req, res) => {
+  try {
+    const { cropName, area, city, soil, fertilizer } = req.body;
+
+    if (!cropName || !area || !city || !soil || !fertilizer) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'All fields (cropName, area, city, soil, fertilizer) are required'
+      });
+    }
+
+    const predictionData = await predictCropYield({ cropName, area, city, soil, fertilizer });
+
+    res.json({
+      status: 'success',
+      weatherUsed: predictionData.weatherUsed,
+      prediction: predictionData.prediction,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};

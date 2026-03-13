@@ -15,7 +15,8 @@ const FarmerDashboard = () => {
     { icon: 'fa-carrot', title: t('navigation.products'), desc: t('dashboard.manageItems') || 'Manage your items', link: '/farmer/products', color: 'green' },
     { icon: 'fa-seedling', title: t('dashboard.cropDiseaseDetection') || 'Crop Disease Detection', desc: t('dashboard.aiDetection') || 'AI-powered detection', link: '/farmer/disease-detection', color: 'emerald' },
     { icon: 'fa-robot', title: t('navigation.chatBot'), desc: t('dashboard.instantHelp') || 'Get instant help', link: '/farmer/chatbot', color: 'amber' },
-    { icon: 'fa-exchange-alt', title: 'Exchange', desc: 'Barter crops & equipment', link: '/farmer/exchange', color: 'blue' },
+    { icon: 'fa-wheat-awn', title: 'Yield Prediction', desc: 'AI harvest estimates', link: '/farmer/yield-prediction', color: 'amber' },
+    { icon: 'fa-cloud-sun-rain', title: 'Weather', desc: '7-day forecast & alerts', link: '/farmer/weather', color: 'blue' },
     { icon: 'fa-leaf', title: 'Crop Recommendation', desc: 'Get best crop suggestions', link: '/farmer/crop-recommendation', color: 'teal' },
     { icon: 'fa-users', title: 'Find Labour', desc: 'Post & find farm workers', link: '/farmer/find-labour', color: 'purple' },
   ];

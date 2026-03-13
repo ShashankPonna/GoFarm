@@ -16,6 +16,7 @@ import FarmerDashboard from './pages/farmer/FarmerDashboard';
 import CropManagement from './pages/farmer/CropManagement';
 import DiseaseDetection from './pages/DiseaseDetection';
 import CropRecommendation from './pages/farmer/CropRecommendation';
+import CropYieldPrediction from './pages/farmer/CropYieldPrediction';
 import WeatherForecast from './pages/farmer/WeatherForecast';
 import ChatBot from './pages/farmer/ChatBot';
 // import Posts from './pages/common/Posts';
@@ -156,6 +157,11 @@ function App() {
               <Route path="/farmer/crop-recommendation" element={
                 <ProtectedRoute allowedRoles={['farmer']}>
                   <CropRecommendation />
+                </ProtectedRoute>
+              } />
+              <Route path="/farmer/yield-prediction" element={
+                <ProtectedRoute allowedRoles={['farmer']}>
+                  <CropYieldPrediction />
                 </ProtectedRoute>
               } />
               <Route path="/farmer/weather" element={

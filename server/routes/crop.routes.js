@@ -11,6 +11,7 @@ router.post('/recommendations/quick', cropController.quickRecommend);
 // Groq AI Routes
 router.post('/groq-advice/:cropName', cropController.getCropAdvice);
 router.post('/soil-improvement', cropController.getSoilPlan);
+router.post('/yield-prediction', cropController.predictYield);
 
 // Standard CRUD routes (parameter-based)
 router.post('/', protect, cropController.createCrop);
