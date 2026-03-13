@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_URL } from '../../utils/api';
 import BackButton from '../../components/BackButton';
 const ChatBot = () => {
   const [messages, setMessages] = useState([
@@ -29,7 +30,6 @@ const ChatBot = () => {
     setIsTyping(true);
 
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
       const response = await axios.post(`${API_URL}/chatbot/message`, {
         message: messageText,
         conversationHistory: messages.slice(-10)

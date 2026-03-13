@@ -1,5 +1,4 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import api from '../../utils/api';
 import BackButton from '../../components/BackButton';
 
 const CropDiseaseDetection = () => {
@@ -49,15 +48,12 @@ const CropDiseaseDetection = () => {
     setIsAnalyzing(true);
     setResult(null);
     try {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      const response = await fetch('/api/cotton/detect', {
-        method: 'POST',
-        body: formData
+      const response = await api.post('/cotton/detect', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
+      if (!data.success) {
         if (data.code === 'LOW_CONFIDENCE') {
           setResult({
             disease: 'Low Confidence Detection',

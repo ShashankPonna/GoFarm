@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import BackButton from '../../components/BackButton';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { API_URL } from '../../utils/api';
+import api, { API_URL } from '../../utils/api';
 
 const MarketIntelligencePage = () => {
     const [crop, setCrop] = useState('');
@@ -43,9 +43,8 @@ const MarketIntelligencePage = () => {
         setLoadingDistricts(true);
         setError('');
         try {
-            const url = `${BASE_API_URL}?limit=100&filters[State]=${selectedState}`;
-            const res = await fetch(url);
-            const data = await res.json();
+            const res = await api.get(`/market/proxy?limit=100&filters[State]=${selectedState}`);
+            const data = res.data;
             if (data.records && Array.isArray(data.records)) {
                 const uniqueDistricts = [...new Set(data.records.map(r => r.district || r.District))].filter(Boolean).sort();
                 if (uniqueDistricts.length === 0) {
@@ -76,9 +75,8 @@ const MarketIntelligencePage = () => {
         setLoadingCrops(true);
         setError('');
         try {
-            const url = `${BASE_API_URL}?limit=100&filters[State]=${state}&filters[District]=${selectedDistrict}`;
-            const res = await fetch(url);
-            const data = await res.json();
+            const res = await api.get(`/market/proxy?limit=100&filters[State]=${state}&filters[District]=${selectedDistrict}`);
+            const data = res.data;
             if (data.records && Array.isArray(data.records)) {
                 const uniqueCrops = [...new Set(data.records.map(r => r.commodity || r.Commodity))].filter(Boolean).sort();
                 if (uniqueCrops.length === 0) {
@@ -103,8 +101,8 @@ const MarketIntelligencePage = () => {
         setFetchingData(true);
         setFetchMessage('');
         try {
-            const res = await fetch(`${API_URL}/market/fetch`, { method: 'POST' });
-            const data = await res.json();
+            const res = await api.post('/market/fetch');
+            const data = res.data;
             if (data.success && (data.saved > 0 || data.skipped > 0)) {
                 setFetchMessage(`✅ Fetched ${data.saved || 0} new records (${data.skipped || 0} duplicates skipped)`);
             } else {
@@ -125,10 +123,8 @@ const MarketIntelligencePage = () => {
         setIntelligence(null);
         
         try {
-            // Step 3: Fetch full mandi price data
-            const url = `${BASE_API_URL}?limit=50&filters[State]=${state}&filters[District]=${district}&filters[Commodity]=${crop}`;
-            const res = await fetch(url);
-            const data = await res.json();
+            const res = await api.get(`/market/proxy?limit=50&filters[State]=${state}&filters[District]=${district}&filters[Commodity]=${crop}`);
+            const data = res.data;
             
             if (data.records && data.records.length > 0) {
                 const records = data.records;
