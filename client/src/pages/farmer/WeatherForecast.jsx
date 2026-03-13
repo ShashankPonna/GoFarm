@@ -7,32 +7,43 @@ const WeatherForecast = () => {
   const [forecast, setForecast] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [location, setLocation] = useState({ lat: 19.07, lon: 72.87 }); // Default: Mumbai
+  const [location, setLocation] = useState(null); // Force real location instead of default
+  const [locationError, setLocationError] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
 
   useEffect(() => {
     // Try to get user's location
     if (navigator.geolocation) {
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setLocation({
             lat: position.coords.latitude,
             lon: position.coords.longitude
           });
+          setLocationError(false);
         },
         (err) => {
-          console.log('Geolocation error, using default:', err);
+          console.error('Geolocation error:', err);
+          setLocationError(true);
+          setLoading(false);
         }
       );
+    } else {
+      setLocationError(true);
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchWeatherData();
+    if (location) {
+      fetchWeatherData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
   const fetchWeatherData = async () => {
+    if (!location) return;
     setLoading(true);
     try {
       // Fetch current weather and forecast in parallel
@@ -83,13 +94,56 @@ const WeatherForecast = () => {
     return colors[condition] || 'bg-gray-100 text-gray-800';
   };
 
+  if (locationError && !location) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-center relative mb-8">
+            <BackButton className="absolute left-0" bgColor="bg-blue-200" color="text-blue-900" />
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-blue-900 mb-2">🌤️ Weather Forecast</h1>
+              <p className="text-gray-700">5-Day Weather & Agricultural Alerts</p>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center max-w-2xl mx-auto">
+            <div className="text-6xl text-amber-500 mb-6 flex justify-center">
+              <i className="fas fa-location-arrow"></i>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Location Required</h2>
+            <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+              To provide accurate, real-time farm-specific weather data and extreme weather alerts, we need to know your exact location.
+            </p>
+            <div className="bg-amber-50 rounded-lg p-6 border border-amber-200 text-amber-800 text-left">
+              <p className="font-semibold mb-2"><i className="fas fa-info-circle mr-2"></i> How to enable location:</p>
+              <ul className="list-disc list-inside space-y-2 ml-2">
+                <li>Look for the location prompt in your browser address bar.</li>
+                <li>Click <strong>"Allow"</strong> when asked for location access.</li>
+                <li>If you previously blocked it, click the lock icon in the address bar to change permissions.</li>
+              </ul>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-8 btn-primary text-lg px-8 py-3"
+            >
+              <i className="fas fa-sync-alt mr-2"></i> Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center py-20">
-            <div className="animate-spin text-5xl mb-4">⌛</div>
-            <p className="text-gray-600">मौसम डेटा लोड हो रहा है...</p>
+          <div className="text-center py-20 flex flex-col justify-center items-center">
+            <div className="animate-spin text-5xl mb-6 text-blue-600">
+               <i className="fas fa-circle-notch"></i>
+            </div>
+            <p className="text-xl font-medium text-gray-700">Fetching real-time weather from your location...</p>
           </div>
         </div>
       </div>
@@ -103,14 +157,39 @@ const WeatherForecast = () => {
         <div className="flex items-center justify-center relative mb-8">
           <BackButton className="absolute left-0" bgColor="bg-blue-200" color="text-blue-900" />
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-blue-900 mb-2">🌤️ मौसम पूर्वानुमान</h1>
-            <p className="text-gray-700">5-दिवसीय विस्तृत मौसम और कृषि सलाह</p>
+            <h1 className="text-4xl font-bold text-blue-900 mb-2">🌤️ Weather Forecast</h1>
+            <p className="text-gray-700">5-Day Weather & Agricultural Alerts</p>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6 shadow-sm">
             ⚠️ {error}
+          </div>
+        )}
+
+        {/* Extreme Weather Alerts Banner */}
+        {currentWeather && currentWeather.alerts && currentWeather.alerts.length > 0 && (
+          <div className="mb-8 space-y-3 animate-fade-in-up">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-red-800">
+              <i className="fas fa-exclamation-triangle"></i> Active Weather Alerts
+            </h2>
+            <div className="flex flex-col gap-3">
+              {currentWeather.alerts.map((alert, idx) => (
+                <div 
+                  key={idx} 
+                  className={`border-l-4 p-4 rounded-r-xl shadow-md ${
+                    alert.level === 'critical' 
+                      ? 'border-red-600 bg-red-50 text-red-900' 
+                      : 'border-orange-500 bg-orange-50 text-orange-900'
+                  }`}
+                >
+                  <p className="font-bold text-lg flex items-center gap-2">
+                    {alert.message}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -129,29 +208,29 @@ const WeatherForecast = () => {
               </div>
 
               {/* Location and Details */}
-              <div className="col-span-1">
-                <p className="text-xl font-semibold text-gray-800 mb-4">{currentWeather.location}</p>
-                <div className="space-y-3 text-gray-700">
-                  <p className="flex justify-between">
-                    <span>💧 आर्द्रता:</span>
-                    <span className="font-semibold">{currentWeather.humidity}%</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>💨 हवा की गति:</span>
-                    <span className="font-semibold">{currentWeather.windSpeed} km/h</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>🧭 हवा की दिशा:</span>
-                    <span className="font-semibold">{currentWeather.windDegree}°</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>🔽 दबाव:</span>
-                    <span className="font-semibold">{currentWeather.pressure} hPa</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span>👁️ दृश्यता:</span>
-                    <span className="font-semibold">{(currentWeather.visibility / 1000).toFixed(1)} km</span>
-                  </p>
+              <div className="col-span-1 border-r border-gray-200 pr-4">
+                <p className="text-2xl font-semibold text-gray-800 mb-6 border-b pb-2">{currentWeather.location}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 rounded-xl p-3 border border-blue-100 flex flex-col items-center text-center">
+                    <span className="text-2xl mb-1">💧</span>
+                    <span className="text-sm text-gray-500 font-medium">Humidity</span>
+                    <span className="font-bold text-lg text-blue-900">{currentWeather.humidity}%</span>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 flex flex-col items-center text-center">
+                    <span className="text-2xl mb-1">💨</span>
+                    <span className="text-sm text-gray-500 font-medium">Wind Speed</span>
+                    <span className="font-bold text-lg text-gray-800">{currentWeather.windSpeed} km/h</span>
+                  </div>
+                  <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-100 flex flex-col items-center text-center">
+                    <span className="text-2xl mb-1">🔽</span>
+                    <span className="text-sm text-gray-500 font-medium">Pressure</span>
+                    <span className="font-bold text-lg text-indigo-900">{currentWeather.pressure} hPa</span>
+                  </div>
+                  <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100 flex flex-col items-center text-center">
+                    <span className="text-2xl mb-1">👁️</span>
+                    <span className="text-sm text-gray-500 font-medium">Visibility</span>
+                    <span className="font-bold text-lg text-emerald-900">{(currentWeather.visibility / 1000).toFixed(1)} km</span>
+                  </div>
                 </div>
               </div>
 
@@ -173,7 +252,9 @@ const WeatherForecast = () => {
 
             {/* Farming Advice */}
             <div className="mt-8 pt-8 border-t border-gray-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">🌾 कृषि सलाह</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i className="fas fa-leaf text-green-600"></i> Agricultural Advice
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {currentWeather.farmingAdvice && currentWeather.farmingAdvice.map((advice, idx) => (
                   <div key={idx} className="bg-green-50 border-l-4 border-green-600 p-4 rounded">
@@ -211,27 +292,27 @@ const WeatherForecast = () => {
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                   {/* Min Temp */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
-                    <p className="text-gray-600 text-sm">न्यूनतम तापमान</p>
-                    <p className="text-3xl font-bold text-blue-700">{forecast[selectedDay].minTemp.toFixed(1)}°C</p>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 shadow-sm">
+                    <p className="text-gray-600 text-sm font-medium">Min Temperature</p>
+                    <p className="text-3xl font-bold text-blue-700 mt-1">{forecast[selectedDay].minTemp.toFixed(1)}°C</p>
                   </div>
 
                   {/* Max Temp */}
-                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4">
-                    <p className="text-gray-600 text-sm">अधिकतम तापमान</p>
-                    <p className="text-3xl font-bold text-red-700">{forecast[selectedDay].maxTemp.toFixed(1)}°C</p>
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-4 shadow-sm">
+                    <p className="text-gray-600 text-sm font-medium">Max Temperature</p>
+                    <p className="text-3xl font-bold text-red-700 mt-1">{forecast[selectedDay].maxTemp.toFixed(1)}°C</p>
                   </div>
 
                   {/* Humidity */}
-                  <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-4">
-                    <p className="text-gray-600 text-sm">आर्द्रता</p>
-                    <p className="text-3xl font-bold text-cyan-700">{forecast[selectedDay].humidity}%</p>
+                  <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-4 shadow-sm">
+                    <p className="text-gray-600 text-sm font-medium">Humidity</p>
+                    <p className="text-3xl font-bold text-cyan-700 mt-1">{forecast[selectedDay].humidity}%</p>
                   </div>
 
                   {/* Rainfall */}
-                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4">
-                    <p className="text-gray-600 text-sm">वर्षा संभावना</p>
-                    <p className="text-3xl font-bold text-indigo-700">{forecast[selectedDay].rainfall.toFixed(1)} mm</p>
+                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4 shadow-sm">
+                    <p className="text-gray-600 text-sm font-medium">Rainfall Amount</p>
+                    <p className="text-3xl font-bold text-indigo-700 mt-1">{forecast[selectedDay].rainfall.toFixed(1)} mm</p>
                   </div>
                 </div>
 
@@ -247,9 +328,11 @@ const WeatherForecast = () => {
                 </div>
 
                 {/* Hourly Forecast */}
-                <div className="">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">⏰ घंटे-दर-घंटे पूर्वानुमास</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto">
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-clock text-blue-600"></i> Hourly Forecast
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                     {forecast[selectedDay].forecasts && forecast[selectedDay].forecasts.map((hourly, idx) => (
                       <div key={idx} className="bg-gray-50 rounded-lg p-3 text-center hover:bg-gray-100 transition">
                         <p className="text-xs text-gray-600 mb-2">{hourly.time}</p>
@@ -266,12 +349,12 @@ const WeatherForecast = () => {
         )}
 
         {/* Refresh Button */}
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center pb-12">
           <button
             onClick={fetchWeatherData}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+            className="btn-primary"
           >
-            🔄 ताज़ा करें
+            <i className="fas fa-sync-alt mr-2"></i> Refresh Weather Data
           </button>
         </div>
       </div>

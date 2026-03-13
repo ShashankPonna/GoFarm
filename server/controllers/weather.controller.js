@@ -3,61 +3,83 @@ const axios = require('axios');
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
-// Get farming advice based on weather conditions
-const getFarmingAdvice = (weather) => {
-  const { main, description, wind, clouds } = weather;
-  const temp = main.temp;
-  const humidity = main.humidity;
-  const windSpeed = wind.speed;
-  const cloudiness = clouds.all;
+// Get farming advice and extreme weather alerts based on weather conditions
+const getFarmingAdviceAndAlerts = (weatherObj) => {
+  const { main, wind, clouds } = weatherObj;
+  const temp = main?.temp || 0;
+  const humidity = main?.humidity || 0;
+  const windSpeed = (wind?.speed || 0) * 3.6; // Convert m/s to km/h
+  const cloudiness = clouds?.all || 0;
+  
+  const weatherArr = weatherObj.weather && weatherObj.weather[0] ? weatherObj.weather[0] : {};
+  const description = weatherArr.description || '';
+  const weatherMainStr = weatherArr.main ? weatherArr.main.toLowerCase() : '';
 
   const advice = [];
+  const alerts = []; // Array to hold extreme weather alerts
+
+  // EXTREME WEATHER ALERTS
+  if (temp > 40) {
+    alerts.push({ type: 'heat', message: '⚠️ Heat Wave Alert: Extremely high temperatures. Protect sensitive crops and assure ample irrigation.', level: 'critical' });
+  } else if (temp < 4) {
+    alerts.push({ type: 'frost', message: '❄️ Frost Risk: Freezing temperatures. Use covers or heaters to protect vulnerable plants.', level: 'critical' });
+  }
+
+  if (windSpeed > 40) {
+    alerts.push({ type: 'storm', message: `🌪️ Storm Warning: High winds (${Math.round(windSpeed)} km/h). Secure equipment and protect tall crops.`, level: 'warning' });
+  }
+
+  if (weatherMainStr === 'thunderstorm' || weatherMainStr === 'extreme' || description.includes('heavy rain')) {
+    alerts.push({ type: 'rain', message: '⛈️ Heavy Rainfall / Thunderstorm Alert: Risk of waterlogging. Check drainage systems.', level: 'warning' });
+  }
+
+  // STANDARD FARMING ADVICE
 
   // Temperature-based advice
-  if (temp < 10) {
-    advice.push('🌡️ ठंड: ठंड-सहिष्णु फसलें (गेहूँ, दालें) बोएं');
-  } else if (temp > 35) {
-    advice.push('🌡️ अत्यधिक गर्मी: सिंचाई बढ़ाएं, सूखा-सहिष्णु फसलें चुनें');
-  } else {
-    advice.push('🌡️ अनुकूल तापमान: सभी फसलों के लिए अच्छा मौसम');
+  if (temp < 10 && temp >= 4) {
+    advice.push('🌡️ Cold: Plant cold-tolerant crops like wheat and pulses.');
+  } else if (temp > 35 && temp <= 40) {
+    advice.push('🌡️ High Heat: Increase irrigation frequency, prefer drought-resistant crops.');
+  } else if (temp >= 10 && temp <= 35) {
+    advice.push('🌡️ Favorable Temperature: Good conditions for most seasonal crops.');
   }
 
   // Humidity-based advice
   if (humidity > 80) {
-    advice.push('💧 उच्च आर्द्रता: कवक रोगों का जोखिम, निवारक छिड़काव करें');
+    advice.push('💧 High Humidity: Risk of fungal diseases. Apply preventive fungicide sprays.');
   } else if (humidity < 40) {
-    advice.push('💧 कम आर्द्रता: पानी की कमी, सिंचाई की योजना बनाएं');
+    advice.push('💧 Low Humidity: Plants may dry out quickly. Plan irrigation accordingly.');
   }
 
   // Wind-based advice
-  if (windSpeed > 25) {
-    advice.push('💨 तेज़ हवा: फसलों को क्षति का खतरा, सहायक संरचना जोड़ें');
-  } else if (windSpeed < 2) {
-    advice.push('💨 शांत हवा: कीट नियंत्रण के लिए अच्छा समय');
+  if (windSpeed > 25 && windSpeed <= 40) {
+    advice.push('💨 Moderate Wind: Avoid pesticide spraying. Provide support to tall plants.');
+  } else if (windSpeed < 5) {
+    advice.push('💨 Calm Wind: Excellent time for pesticide or fertilizer spraying.');
   }
 
   // Cloud coverage
-  if (cloudiness > 80) {
-    advice.push('☁️ बादल: बारिश संभव है, खाद आवेदन में देरी करें');
+  if (cloudiness > 80 && alerts.length === 0) {
+    advice.push('☁️ Overcast: Rain is likely. Delay fertilizer application.');
   }
 
   // Additional rainfall-related advice
-  if (description.includes('rain')) {
-    advice.push('🌧️ बारिश: जल भराव से बचें, निकासी सुनिश्चित करें');
+  if (description.includes('rain') && alerts.findIndex(a => a.type === 'rain') === -1) {
+    advice.push('🌧️ Light/Moderate Rain: Avoid waterlogging. Ensure proper field drainage.');
   }
 
-  return advice;
+  return { advice, alerts };
 };
 
 // Demo weather data for testing (when API key is invalid)
 const getDemoWeatherData = (location = 'Mumbai') => {
   return {
     location: `${location}, India`,
-    temperature: 28,
-    feelsLike: 30,
+    temperature: 42, // high temp to show heat wave alert in demo
+    feelsLike: 45,
     humidity: 75,
     pressure: 1013,
-    windSpeed: 12,
+    windSpeed: 45, // high wind to show storm alert in demo
     windDegree: 230,
     cloudiness: 65,
     visibility: 10000,
@@ -67,9 +89,12 @@ const getDemoWeatherData = (location = 'Mumbai') => {
     sunrise: '06:45:00',
     sunset: '18:30:00',
     farmingAdvice: [
-      '🌡️ अनुकूल तापमान: सभी फसलों के लिए अच्छा मौसम',
-      '💧 उच्च आर्द्रता: कवक रोगों का जोखिम, निवारक छिड़काव करें',
-      '💨 शांत हवा: कीट नियंत्रण के लिए अच्छा समय'
+      '🌡️ High Heat: Increase irrigation frequency, prefer drought-resistant crops.',
+      '💧 High Humidity: Risk of fungal diseases. Apply preventive fungicide sprays.'
+    ],
+    alerts: [
+      { type: 'heat', message: '⚠️ Heat Wave Alert: Extremely high temperatures. Protect sensitive crops and assure ample irrigation.', level: 'critical' },
+      { type: 'storm', message: '🌪️ Storm Warning: High winds (45 km/h). Secure equipment and protect tall crops.', level: 'warning' }
     ],
     timestamp: new Date().toISOString(),
     isDemoData: true,
@@ -89,63 +114,53 @@ exports.getCurrentWeather = async (req, res) => {
       });
     }
 
-    console.log('Weather API Key loaded:', !!OPENWEATHER_API_KEY, 'Type:', typeof OPENWEATHER_API_KEY);
-
-    // Always use demo data for now to ensure UI works
-    try {
-      // Try to use real API if key is valid
-      if (OPENWEATHER_API_KEY && typeof OPENWEATHER_API_KEY === 'string' && !OPENWEATHER_API_KEY.includes('YOUR_')) {
-        let url = `${OPENWEATHER_BASE_URL}/weather?appid=${OPENWEATHER_API_KEY}&units=metric`;
-
-        if (city) {
-          url += `&q=${city}`;
-        } else {
-          url += `&lat=${lat}&lon=${lon}`;
-        }
-
-        const response = await axios.get(url);
-        const data = response.data;
-
-        // Get farming advice
-        const farmingAdvice = getFarmingAdvice(data);
-
-        // Format response
-        const weatherData = {
-          location: `${data.name}, ${data.sys.country}`,
-          temperature: data.main.temp,
-          feelsLike: data.main.feels_like,
-          humidity: data.main.humidity,
-          pressure: data.main.pressure,
-          windSpeed: data.wind.speed,
-          windDegree: data.wind.deg,
-          cloudiness: data.clouds.all,
-          visibility: data.visibility,
-          description: data.weather[0].description,
-          condition: data.weather[0].main,
-          icon: data.weather[0].icon,
-          sunrise: new Date(data.sys.sunrise * 1000).toLocaleTimeString('hi-IN'),
-          sunset: new Date(data.sys.sunset * 1000).toLocaleTimeString('hi-IN'),
-          farmingAdvice: farmingAdvice,
-          timestamp: new Date().toISOString(),
-          source: 'live'
-        };
-
-        return res.json({
-          status: 'success',
-          data: weatherData,
-          message: 'Current weather fetched successfully'
-        });
-      }
-    } catch (apiErr) {
-      console.warn('Real API failed, falling back to demo data:', apiErr.message);
+    if (!OPENWEATHER_API_KEY || OPENWEATHER_API_KEY.includes('YOUR_')) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'OpenWeather API Key is not configured correctly in the environment.'
+      });
     }
 
-    // Fall back to demo data
-    const demoData = getDemoWeatherData(city || 'Mumbai');
+    let url = `${OPENWEATHER_BASE_URL}/weather?appid=${OPENWEATHER_API_KEY}&units=metric`;
+
+    if (city) {
+      url += `&q=${city}`;
+    } else {
+      url += `&lat=${lat}&lon=${lon}`;
+    }
+
+    const response = await axios.get(url);
+    const data = response.data;
+
+    // Get farming advice and extreme weather alerts
+    const { advice: farmingAdvice, alerts } = getFarmingAdviceAndAlerts(data);
+
+    // Format response
+    const weatherData = {
+      location: `${data.name}, ${data.sys.country}`,
+      temperature: data.main.temp,
+      feelsLike: data.main.feels_like,
+      humidity: data.main.humidity,
+      pressure: data.main.pressure,
+      windSpeed: Math.round(data.wind.speed * 3.6), // km/h
+      windDegree: data.wind.deg,
+      cloudiness: data.clouds.all,
+      visibility: data.visibility,
+      description: data.weather[0].description,
+      condition: data.weather[0].main,
+      icon: data.weather[0].icon,
+      sunrise: new Date(data.sys.sunrise * 1000).toLocaleTimeString('en-IN'),
+      sunset: new Date(data.sys.sunset * 1000).toLocaleTimeString('en-IN'),
+      farmingAdvice: farmingAdvice,
+      alerts: alerts,
+      timestamp: new Date().toISOString(),
+      source: 'live'
+    };
+
     return res.json({
       status: 'success',
-      data: demoData,
-      message: 'Demo weather data'
+      data: weatherData,
+      message: 'Current weather fetched successfully'
     });
 
   } catch (err) {
@@ -211,79 +226,71 @@ exports.getForecast = async (req, res) => {
       });
     }
 
-    // Try to use real API if key is valid
-    try {
-      if (OPENWEATHER_API_KEY && typeof OPENWEATHER_API_KEY === 'string' && !OPENWEATHER_API_KEY.includes('YOUR_')) {
-        let url = `${OPENWEATHER_BASE_URL}/forecast?appid=${OPENWEATHER_API_KEY}&units=metric`;
-
-        if (city) {
-          url += `&q=${city}`;
-        } else {
-          url += `&lat=${lat}&lon=${lon}`;
-        }
-
-        const response = await axios.get(url);
-        const data = response.data;
-
-        // Group forecast by date
-        const forecastByDate = {};
-
-        data.list.forEach(item => {
-          const date = new Date(item.dt * 1000).toLocaleDateString('en-IN');
-
-          if (!forecastByDate[date]) {
-            forecastByDate[date] = {
-              date: date,
-              minTemp: item.main.temp_min,
-              maxTemp: item.main.temp_max,
-              humidity: item.main.humidity,
-              description: item.weather[0].description,
-              condition: item.weather[0].main,
-              icon: item.weather[0].icon,
-              windSpeed: item.wind.speed,
-              rainfall: item.rain?.['3h'] || 0,
-              forecasts: [] // hourly data
-            };
-          }
-
-          forecastByDate[date].forecasts.push({
-            time: new Date(item.dt * 1000).toLocaleTimeString('hi-IN'),
-            temp: item.main.temp,
-            humidity: item.main.humidity,
-            description: item.weather[0].description,
-            windSpeed: item.wind.speed,
-            rainfall: item.rain?.['3h'] || 0
-          });
-
-          // Update min/max
-          forecastByDate[date].minTemp = Math.min(forecastByDate[date].minTemp, item.main.temp_min);
-          forecastByDate[date].maxTemp = Math.max(forecastByDate[date].maxTemp, item.main.temp_max);
-        });
-
-        // Convert to array and get first 5 days
-        const forecast = Object.values(forecastByDate).slice(0, 5);
-
-        return res.json({
-          status: 'success',
-          data: {
-            location: `${data.city.name}, ${data.city.country}`,
-            forecast: forecast,
-            timestamp: new Date().toISOString(),
-            source: 'live'
-          },
-          message: '5-day forecast fetched successfully'
-        });
-      }
-    } catch (apiErr) {
-      console.warn('Real forecast API failed, falling back to demo:', apiErr.message);
+    if (!OPENWEATHER_API_KEY || OPENWEATHER_API_KEY.includes('YOUR_')) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'OpenWeather API Key is not configured correctly in the environment.'
+      });
     }
 
-    // Fall back to demo data
-    const demoData = getDemoForecastData(city || 'Mumbai, India');
+    let url = `${OPENWEATHER_BASE_URL}/forecast?appid=${OPENWEATHER_API_KEY}&units=metric`;
+
+    if (city) {
+      url += `&q=${city}`;
+    } else {
+      url += `&lat=${lat}&lon=${lon}`;
+    }
+
+    const response = await axios.get(url);
+    const data = response.data;
+
+    // Group forecast by date
+    const forecastByDate = {};
+
+    data.list.forEach(item => {
+      const date = new Date(item.dt * 1000).toLocaleDateString('en-IN');
+
+      if (!forecastByDate[date]) {
+        forecastByDate[date] = {
+          date: date,
+          minTemp: item.main.temp_min,
+          maxTemp: item.main.temp_max,
+          humidity: item.main.humidity,
+          description: item.weather[0].description,
+          condition: item.weather[0].main,
+          icon: item.weather[0].icon,
+          windSpeed: item.wind.speed,
+          rainfall: item.rain?.['3h'] || 0,
+          forecasts: [] // hourly data
+        };
+      }
+
+      forecastByDate[date].forecasts.push({
+        time: new Date(item.dt * 1000).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        temp: item.main.temp,
+        humidity: item.main.humidity,
+        description: item.weather[0].description,
+        windSpeed: item.wind.speed,
+        rainfall: item.rain?.['3h'] || 0
+      });
+
+      // Update min/max
+      forecastByDate[date].minTemp = Math.min(forecastByDate[date].minTemp, item.main.temp_min);
+      forecastByDate[date].maxTemp = Math.max(forecastByDate[date].maxTemp, item.main.temp_max);
+    });
+
+    // Convert to array and get first 5 days
+    const forecast = Object.values(forecastByDate).slice(0, 5);
+
     return res.json({
       status: 'success',
-      data: demoData,
-      message: 'Demo forecast data'
+      data: {
+        location: `${data.city.name}, ${data.city.country}`,
+        forecast: forecast,
+        timestamp: new Date().toISOString(),
+        source: 'live'
+      },
+      message: '5-day forecast fetched successfully'
     });
 
   } catch (err) {
@@ -313,7 +320,7 @@ exports.getWeatherByLocation = async (req, res) => {
     const response = await axios.get(url);
     const data = response.data;
 
-    const farmingAdvice = getFarmingAdvice(data);
+    const { advice: farmingAdvice, alerts } = getFarmingAdviceAndAlerts(data);
 
     const weatherData = {
       location: `${data.name}, ${data.sys.country}`,
@@ -327,16 +334,17 @@ exports.getWeatherByLocation = async (req, res) => {
       tempMax: data.main.temp_max,
       humidity: data.main.humidity,
       pressure: data.main.pressure,
-      windSpeed: data.wind.speed,
+      windSpeed: Math.round(data.wind.speed * 3.6), // convert m/s to km/h
       windDegree: data.wind.deg,
       cloudiness: data.clouds.all,
       visibility: data.visibility,
       description: data.weather[0].description,
       condition: data.weather[0].main,
       icon: data.weather[0].icon,
-      sunrise: new Date(data.sys.sunrise * 1000).toLocaleTimeString('hi-IN'),
-      sunset: new Date(data.sys.sunset * 1000).toLocaleTimeString('hi-IN'),
+      sunrise: new Date(data.sys.sunrise * 1000).toLocaleTimeString('en-IN'),
+      sunset: new Date(data.sys.sunset * 1000).toLocaleTimeString('en-IN'),
       farmingAdvice: farmingAdvice,
+      alerts: alerts,
       timestamp: new Date().toISOString()
     };
 
