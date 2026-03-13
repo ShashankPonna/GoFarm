@@ -25,4 +25,10 @@ Thumbs.db
 .LSOverride
 
 # Dependencies
-package-lock.json
+# ML Models & Datasets
+*.h5
+*.keras
+*.ipynb
+cotton_leaf_dataset/
+imagess/
+uploads/
