@@ -14,4 +14,7 @@ router.get('/districts', marketIntelligenceController.getDistricts);
 // POST /api/market/fetch — manually trigger data fetch from Agmarknet
 router.post('/fetch', marketIntelligenceController.fetchLatestPrices);
 
+// GET /api/market/proxy — proxy requests to Agmarknet
+router.get('/proxy', marketIntelligenceController.proxyAgmarknet);
+
 module.exports = router;

@@ -29,7 +29,7 @@ const CropRecommendation = () => {
   const [adviceLoading, setAdviceLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('soil');
-  const [activeView, setActiveView] = useState('results'); // results, groq, advice, soilplan
+  const [activeView, setActiveView] = useState('results');
 
   const handleInputChange = (category, field, value) => {
     setFormData(prev => ({
@@ -90,83 +90,140 @@ const CropRecommendation = () => {
 
   const getScoreColor = (score) => {
     if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
+    if (score >= 60) return 'bg-amber-500';
     if (score >= 40) return 'bg-orange-500';
     return 'bg-red-500';
   };
 
-  const getRiskColor = (risk) => {
-    const colors = {
-      'Low': 'bg-green-100 text-green-800',
-      'Medium': 'bg-yellow-100 text-yellow-800',
-      'High': 'bg-red-100 text-red-800'
-    };
-    return colors[risk] || 'bg-gray-100 text-gray-800';
+  const getScoreBg = (score) => {
+    if (score >= 80) return 'bg-green-50 border-green-200';
+    if (score >= 60) return 'bg-amber-50 border-amber-200';
+    if (score >= 40) return 'bg-orange-50 border-orange-200';
+    return 'bg-red-50 border-red-200';
   };
 
   const getDemandColor = (demand) => {
     const colors = {
-      'High': 'bg-blue-100 text-blue-800',
-      'Medium': 'bg-purple-100 text-purple-800',
-      'Low': 'bg-gray-100 text-gray-800'
+      'High': 'text-green-700 bg-green-100',
+      'Medium': 'text-amber-700 bg-amber-100',
+      'Low': 'text-gray-600 bg-gray-100'
     };
-    return colors[demand] || 'bg-gray-100 text-gray-800';
+    return colors[demand] || 'text-gray-600 bg-gray-100';
   };
 
+  // Reusable input component for farmers
+  const FormInput = ({ label, icon, unit, value, onChange, type = 'number', ...props }) => (
+    <div>
+      <label className="flex items-center gap-2 text-sm font-bold text-gray-600 mb-2">
+        <i className={`fas ${icon} text-green-500`}></i>
+        {label}
+        {unit && <span className="text-xs font-normal text-gray-400">({unit})</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        className="w-full px-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 focus:outline-none transition-all text-lg font-medium bg-white"
+        {...props}
+      />
+    </div>
+  );
+
+  // Reusable range slider with clear value display
+  const RangeInput = ({ label, icon, unit, value, onChange, min, max, step: stepVal }) => (
+    <div>
+      <label className="flex items-center justify-between text-sm font-bold text-gray-600 mb-2">
+        <span className="flex items-center gap-2">
+          <i className={`fas ${icon} text-green-500`}></i>
+          {label}
+        </span>
+        <span className="text-lg font-extrabold text-green-700 bg-green-50 px-3 py-1 rounded-xl">
+          {value}{unit}
+        </span>
+      </label>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={stepVal}
+        value={value}
+        onChange={onChange}
+        className="w-full h-3 rounded-full appearance-none cursor-pointer accent-green-600"
+        style={{ background: `linear-gradient(to right, #22c55e ${((value - min) / (max - min)) * 100}%, #e5e7eb ${((value - min) / (max - min)) * 100}%)` }}
+      />
+      <div className="flex justify-between text-xs text-gray-400 mt-1">
+        <span>{min}{unit}</span>
+        <span>{max}{unit}</span>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-center relative mb-8">
-          <BackButton className="absolute left-0" bgColor="bg-green-100" color="text-green-800" />
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-green-700 mb-2">Crop Recommendation</h1>
-            <p className="text-gray-600">AI-Powered Farming Guidance</p>
-            <p className="text-sm text-gray-500 mt-2">Discover the best crops for your soil and weather</p>
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pb-24">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-green-100/50 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <BackButton />
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+              <i className="fas fa-seedling text-white"></i>
+            </div>
+            <div>
+              <h1 className="text-lg font-extrabold text-gray-800">Crop Recommendation</h1>
+              <p className="text-xs text-gray-400 font-medium">AI-powered farming guidance</p>
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Main Container */}
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
           {/* Form Section */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-green-700 mb-4">Enter Data</h2>
+            <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 p-6 sticky top-20">
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i className="fas fa-clipboard-list text-green-600"></i>
+                Enter Your Data
+              </h2>
 
               {/* Tabs */}
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-5 bg-gray-100 rounded-2xl p-1">
                 <button
                   onClick={() => setActiveTab('soil')}
-                  className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeTab === 'soil'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'soil'
+                    ? 'bg-white text-green-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
                 >
+                  <i className="fas fa-mountain"></i>
                   Soil
                 </button>
                 <button
                   onClick={() => setActiveTab('weather')}
-                  className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeTab === 'weather'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'weather'
+                    ? 'bg-white text-green-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }`}
                 >
+                  <i className="fas fa-cloud-sun"></i>
                   Weather
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Soil Tab */}
                 {activeTab === 'soil' && (
-                  <div className="space-y-4">
+                  <div className="space-y-5 animate-fade-in">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-bold text-gray-600 mb-2">
+                        <i className="fas fa-mountain text-green-500"></i>
                         Soil Type
                       </label>
                       <select
                         value={formData.soil.type}
                         onChange={(e) => handleInputChange('soil', 'type', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
+                        className="w-full px-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 focus:outline-none transition-all text-base font-medium bg-white appearance-none cursor-pointer"
                       >
                         <option>Loamy</option>
                         <option>Clay</option>
@@ -177,146 +234,91 @@ const CropRecommendation = () => {
                       </select>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        pH Level: {formData.soil.ph}
-                      </label>
-                      <input
-                        type="range"
-                        min="4"
-                        max="9"
-                        step="0.1"
-                        value={formData.soil.ph}
-                        onChange={(e) => handleInputChange('soil', 'ph', e.target.value)}
-                        className="w-full"
-                      />
-                      <span className="text-xs text-gray-500">(Normal range 4-9)</span>
-                    </div>
+                    <RangeInput
+                      label="pH Level" icon="fa-flask" unit=""
+                      value={formData.soil.ph}
+                      onChange={(e) => handleInputChange('soil', 'ph', e.target.value)}
+                      min={4} max={9} step={0.1}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Nitrogen (N): {formData.soil.n} mg/kg
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.soil.n}
-                        onChange={(e) => handleInputChange('soil', 'n', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                      />
-                    </div>
+                    <FormInput
+                      label="Nitrogen (N)" icon="fa-atom" unit="mg/kg"
+                      value={formData.soil.n}
+                      onChange={(e) => handleInputChange('soil', 'n', e.target.value)}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Phosphorus (P): {formData.soil.p} mg/kg
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.soil.p}
-                        onChange={(e) => handleInputChange('soil', 'p', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                      />
-                    </div>
+                    <FormInput
+                      label="Phosphorus (P)" icon="fa-atom" unit="mg/kg"
+                      value={formData.soil.p}
+                      onChange={(e) => handleInputChange('soil', 'p', e.target.value)}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Potassium (K): {formData.soil.k} mg/kg
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.soil.k}
-                        onChange={(e) => handleInputChange('soil', 'k', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                      />
-                    </div>
+                    <FormInput
+                      label="Potassium (K)" icon="fa-atom" unit="mg/kg"
+                      value={formData.soil.k}
+                      onChange={(e) => handleInputChange('soil', 'k', e.target.value)}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Organic Carbon: {formData.soil.organicCarbon} %
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={formData.soil.organicCarbon}
-                        onChange={(e) => handleInputChange('soil', 'organicCarbon', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                      />
-                    </div>
+                    <FormInput
+                      label="Organic Carbon" icon="fa-leaf" unit="%"
+                      value={formData.soil.organicCarbon}
+                      onChange={(e) => handleInputChange('soil', 'organicCarbon', e.target.value)}
+                      step="0.1"
+                    />
                   </div>
                 )}
 
                 {/* Weather Tab */}
                 {activeTab === 'weather' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Temperature: {formData.weather.temp}°C
-                      </label>
-                      <input
-                        type="range"
-                        min="-10"
-                        max="50"
-                        step="0.5"
-                        value={formData.weather.temp}
-                        onChange={(e) => handleInputChange('weather', 'temp', e.target.value)}
-                        className="w-full"
-                      />
-                    </div>
+                  <div className="space-y-5 animate-fade-in">
+                    <RangeInput
+                      label="Temperature" icon="fa-thermometer-half" unit="°C"
+                      value={formData.weather.temp}
+                      onChange={(e) => handleInputChange('weather', 'temp', e.target.value)}
+                      min={-10} max={50} step={0.5}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Humidity: {formData.weather.humidity} %
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={formData.weather.humidity}
-                        onChange={(e) => handleInputChange('weather', 'humidity', e.target.value)}
-                        className="w-full"
-                      />
-                    </div>
+                    <RangeInput
+                      label="Humidity" icon="fa-tint" unit="%"
+                      value={formData.weather.humidity}
+                      onChange={(e) => handleInputChange('weather', 'humidity', e.target.value)}
+                      min={0} max={100} step={1}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Annual Rainfall: {formData.weather.rainfall} mm
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.weather.rainfall}
-                        onChange={(e) => handleInputChange('weather', 'rainfall', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                      />
-                    </div>
+                    <FormInput
+                      label="Annual Rainfall" icon="fa-cloud-rain" unit="mm"
+                      value={formData.weather.rainfall}
+                      onChange={(e) => handleInputChange('weather', 'rainfall', e.target.value)}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Region/State
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.weather.region}
-                        onChange={(e) => handleInputChange('weather', 'region', e.target.value)}
-                        placeholder="e.g. Maharashtra"
-                        className="w-full border border-gray-300 rounded px-3 py-2"
-                      />
-                    </div>
+                    <FormInput
+                      label="Region / State" icon="fa-map-marker-alt" unit=""
+                      value={formData.weather.region}
+                      onChange={(e) => handleInputChange('weather', 'region', e.target.value)}
+                      type="text"
+                      placeholder="e.g. Maharashtra"
+                    />
                   </div>
                 )}
 
-                {/* Submit Button */}
+                {/* Submit */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition mt-6"
+                  className="btn-primary w-full flex items-center justify-center gap-2 text-base mt-4"
                 >
-                  {loading ? 'Finding Recommendations...' : 'Get Recommendations'}
+                  {loading ? (
+                    <><i className="fas fa-spinner fa-spin"></i> Finding Best Crops...</>
+                  ) : (
+                    <><i className="fas fa-search"></i> Get Recommendations</>
+                  )}
                 </button>
               </form>
 
               {error && (
-                <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-                  ⚠️ {error}
+                <div className="alert-error mt-4 animate-scale-in">
+                  <i className="fas fa-exclamation-circle flex-shrink-0"></i>
+                  <span>{error}</span>
                 </div>
               )}
             </div>
@@ -325,134 +327,172 @@ const CropRecommendation = () => {
           {/* Results Section */}
           <div className="lg:col-span-2">
             {!recommendations && !loading && (
-              <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                <div className="text-6xl mb-4">🌾</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No Recommendations Yet</h3>
-                <p className="text-gray-600">Enter your soil and weather data to discover the best crops.</p>
+              <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 p-10 text-center animate-fade-in">
+                <div className="w-20 h-20 bg-green-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-seedling text-3xl text-green-500"></i>
+                </div>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">No Recommendations Yet</h3>
+                <p className="text-gray-400 text-sm max-w-sm mx-auto">Enter your soil and weather data on the left, then tap "Get Recommendations" to discover the best crops for your farm.</p>
               </div>
             )}
 
             {loading && (
-              <div className="bg-white rounded-lg shadow-lg p-8 text-center text-gray-600">
-                <div className="animate-spin text-4xl mb-4">⌛</div>
-                <p>Generating AI recommendations...</p>
+              <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 p-10 text-center animate-fade-in">
+                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce-soft">
+                  <i className="fas fa-brain text-2xl text-green-600"></i>
+                </div>
+                <h3 className="text-lg font-bold text-gray-700 mb-1">AI is Analyzing...</h3>
+                <p className="text-gray-400 text-sm">Finding the best crops for your conditions</p>
+                <div className="mt-4 flex justify-center gap-1">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="w-2.5 h-2.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }}></div>
+                  ))}
+                </div>
               </div>
             )}
 
             {recommendations && !loading && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* View Tabs */}
-                <div className="flex gap-2 mb-4 bg-white rounded-lg shadow p-2">
+                <div className="flex gap-2 bg-white rounded-3xl shadow-card border border-gray-100/60 p-2">
                   <button
-                    onClick={() => setActiveTab('results')}
-                    className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeView === 'results' || activeView === 'top_crop'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                    onClick={() => setActiveView('results')}
+                    className={`flex-1 py-3 px-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      activeView === 'results' || activeView === 'top_crop'
+                        ? 'bg-green-600 text-white shadow-md'
+                        : 'text-gray-500 hover:bg-gray-50'
+                    }`}
                   >
-                    🌾 Top Crops
+                    <i className="fas fa-leaf"></i>
+                    Top Crops
                   </button>
                   <button
                     onClick={() => setActiveView('groq')}
-                    className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeView === 'groq'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                    className={`flex-1 py-3 px-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      activeView === 'groq'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-gray-500 hover:bg-gray-50'
+                    }`}
                   >
-                    🤖 {loading ? '⌛ AI...' : 'AI Strategy'}
+                    <i className="fas fa-robot"></i>
+                    AI Strategy
                   </button>
                   <button
                     onClick={getSoilImprovement}
                     disabled={adviceLoading}
-                    className={`flex-1 py-2 px-3 rounded font-semibold transition ${activeView === 'soilplan'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
-                      }`}
+                    className={`flex-1 py-3 px-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                      activeView === 'soilplan'
+                        ? 'bg-teal-600 text-white shadow-md'
+                        : 'text-gray-500 hover:bg-gray-50 disabled:opacity-50'
+                    }`}
                   >
-                    🌱 Soil Plan
+                    <i className="fas fa-seedling"></i>
+                    Soil Plan
                   </button>
                 </div>
 
                 {/* Results View */}
                 {(activeView === 'results' || activeView === 'top_crop') && (
-                  <div className="space-y-6">
+                  <div className="space-y-5 animate-stagger">
                     {recommendations && recommendations.length > 0 && recommendations.map((crop, idx) => (
-                      <div key={idx} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
-                        {/* Header */}
-                        <div className={`p-4 ${idx === 0 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white' : 'bg-gray-50 border-b border-gray-200'}`}>
+                      <div key={idx} className="bg-white rounded-3xl shadow-card border border-gray-100/60 overflow-hidden hover:shadow-card-hover transition-all">
+                        {/* Crop Header */}
+                        <div className={`p-5 ${idx === 0 ? 'bg-gradient-to-r from-green-600 to-green-700' : 'bg-gray-50 border-b border-gray-100'}`}>
                           <div className="flex items-center justify-between">
                             <div>
-                              <h3 className={`text-2xl font-bold flex items-center gap-2 ${idx === 0 ? 'text-white' : 'text-green-700'}`}>
-                                {idx === 0 && '⭐ '}#{idx + 1} {crop.cropName}
-                              </h3>
-                              {idx === 0 && <p className="text-green-100 text-sm">Best match for your farm</p>}
-                            </div>
-                            <div className="text-right flex flex-col items-center">
-                              <div className={`${getScoreColor(crop.suitabilityScore)} text-white rounded-full w-16 h-16 flex items-center justify-center`}>
-                                <span className="text-2xl font-bold">{crop.suitabilityScore}</span>
+                              <div className="flex items-center gap-2">
+                                {idx === 0 && <span className="text-amber-300 text-lg">⭐</span>}
+                                <h3 className={`text-xl font-extrabold ${idx === 0 ? 'text-white' : 'text-gray-800'}`}>
+                                  #{idx + 1} {crop.cropName}
+                                </h3>
                               </div>
-                              <span className={`text-xs mt-1 ${idx === 0 ? 'text-green-100' : 'text-gray-500'}`}>Score</span>
+                              {idx === 0 && <p className="text-green-100 text-sm mt-1 font-medium">Best match for your farm</p>}
+                            </div>
+                            <div className="text-center">
+                              <div className={`${getScoreColor(crop.suitabilityScore)} text-white rounded-2xl w-16 h-16 flex flex-col items-center justify-center shadow-md`}>
+                                <span className="text-xl font-extrabold leading-none">{crop.suitabilityScore}</span>
+                                <span className="text-[9px] font-semibold opacity-80">SCORE</span>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Body */}
-                        <div className="p-5">
+                        {/* Crop Body */}
+                        <div className="p-5 space-y-4">
                           {/* Why Suitable */}
-                          <div className="mb-4">
-                            <h4 className="font-bold text-gray-800 mb-2">✓ Why it's suitable:</h4>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                              {crop.whySuitable && crop.whySuitable.map((reason, i) => (
-                                <li key={i}>{reason}</li>
-                              ))}
-                            </ul>
-                          </div>
+                          {crop.whySuitable && crop.whySuitable.length > 0 && (
+                            <div>
+                              <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center gap-2">
+                                <i className="fas fa-check-circle text-green-500"></i>
+                                Why it's suitable
+                              </h4>
+                              <ul className="space-y-1.5">
+                                {crop.whySuitable.map((reason, i) => (
+                                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                                    <span className="text-green-400 mt-0.5 flex-shrink-0">✓</span>
+                                    {reason}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
 
                           {/* Stats Grid */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                            <div className="bg-blue-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">Expected Yield</p>
-                              <p className="font-bold text-blue-700 text-sm">{crop.expectedYield || 'N/A'}</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                              <p className="text-xs text-blue-500 font-semibold mb-1">
+                                <i className="fas fa-chart-line mr-1"></i> Yield
+                              </p>
+                              <p className="font-bold text-blue-800 text-sm">{crop.expectedYield || 'N/A'}</p>
                             </div>
-                            <div className="bg-orange-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">Sowing Season</p>
-                              <p className="font-bold text-orange-700 text-sm">{crop.sowingSeason || 'N/A'}</p>
+                            <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                              <p className="text-xs text-amber-500 font-semibold mb-1">
+                                <i className="fas fa-calendar mr-1"></i> Sowing
+                              </p>
+                              <p className="font-bold text-amber-800 text-sm">{crop.sowingSeason || 'N/A'}</p>
                             </div>
-                            <div className="bg-cyan-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">Water Req.</p>
-                              <p className="font-bold text-cyan-700 text-sm">{crop.waterRequirement || 'N/A'}</p>
+                            <div className="bg-cyan-50 p-4 rounded-2xl border border-cyan-100">
+                              <p className="text-xs text-cyan-500 font-semibold mb-1">
+                                <i className="fas fa-tint mr-1"></i> Water
+                              </p>
+                              <p className="font-bold text-cyan-800 text-sm">{crop.waterRequirement || 'N/A'}</p>
                             </div>
-                            <div className="bg-purple-50 p-3 rounded">
-                              <p className="text-xs text-gray-600">Market Demand</p>
-                              <p className={`font-bold text-sm ${getDemandColor(crop.marketDemand || 'Medium').split(' ')[1]}`}>
+                            <div className={`p-4 rounded-2xl border ${getDemandColor(crop.marketDemand || 'Medium').split(' ').slice(1).join(' ')}`}>
+                              <p className="text-xs font-semibold mb-1" style={{ opacity: 0.7 }}>
+                                <i className="fas fa-store mr-1"></i> Demand
+                              </p>
+                              <p className={`font-bold text-sm ${getDemandColor(crop.marketDemand || 'Medium').split(' ')[0]}`}>
                                 {crop.marketDemand || 'N/A'}
                               </p>
                             </div>
                           </div>
 
-                          {/* Fertilizer Section */}
+                          {/* Fertilizer */}
                           {crop.fertilizer && (
-                            <div className="bg-yellow-50 p-3 rounded mb-4">
-                              <h4 className="font-bold text-gray-800 mb-2 text-sm">🌱 Fertilizer Guide:</h4>
-                              <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                                <p><span className="font-semibold">N:</span> {crop.fertilizer.nitrogen || 'N/A'}</p>
-                                <p><span className="font-semibold">P:</span> {crop.fertilizer.phosphorus || 'N/A'}</p>
-                                <p><span className="font-semibold">K:</span> {crop.fertilizer.potassium || 'N/A'}</p>
-                                <p className="col-span-2"><span className="font-semibold">Organic:</span> {crop.fertilizer.organicMatter || 'N/A'}</p>
+                            <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+                              <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center gap-2">
+                                <i className="fas fa-flask text-green-500"></i>
+                                Fertilizer Guide
+                              </h4>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <p><span className="font-semibold text-gray-600">N:</span> <span className="text-gray-800">{crop.fertilizer.nitrogen || 'N/A'}</span></p>
+                                <p><span className="font-semibold text-gray-600">P:</span> <span className="text-gray-800">{crop.fertilizer.phosphorus || 'N/A'}</span></p>
+                                <p><span className="font-semibold text-gray-600">K:</span> <span className="text-gray-800">{crop.fertilizer.potassium || 'N/A'}</span></p>
+                                <p><span className="font-semibold text-gray-600">Organic:</span> <span className="text-gray-800">{crop.fertilizer.organicMatter || 'N/A'}</span></p>
                               </div>
                             </div>
                           )}
 
-                          {/* Get Detailed Advice Button */}
+                          {/* Advice Button */}
                           <button
                             onClick={() => getCropSpecificAdvice(crop.cropName)}
                             disabled={adviceLoading}
-                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-bold disabled:opacity-50 mt-2"
+                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-2xl transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50"
                           >
                             {adviceLoading && selectedCrop === crop.cropName ? (
-                              '📋 Fetching detailed advice...'
+                              <><i className="fas fa-spinner fa-spin"></i> Loading Advice...</>
                             ) : (
-                              `📋 Get detailed AI advice for ${crop.cropName}`
+                              <><i className="fas fa-lightbulb"></i> Get AI Advice for {crop.cropName}</>
                             )}
                           </button>
                         </div>
@@ -461,62 +501,70 @@ const CropRecommendation = () => {
                   </div>
                 )}
 
-                {/* Groq AI Analysis View */}
+                {/* Groq AI View */}
                 {activeView === 'groq' && (
-                  <div className="bg-white rounded-lg shadow-lg p-6">
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-lg mb-4">
-                      <h2 className="text-2xl font-bold mb-1">🤖 AI Strategy Analysis</h2>
-                      <p className="text-blue-100">Overall agricultural strategy for your conditions</p>
+                  <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 overflow-hidden animate-fade-in">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-5">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <i className="fas fa-robot"></i> AI Strategy Analysis
+                      </h2>
+                      <p className="text-blue-100 text-sm mt-1">Overall farming strategy for your conditions</p>
                     </div>
                     {groqAnalysis ? (
-                      <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4 max-h-96 overflow-y-auto bg-gray-50 rounded">
+                      <div className="p-5 whitespace-pre-wrap text-gray-700 leading-relaxed text-sm max-h-[500px] overflow-y-auto">
                         {groqAnalysis}
                       </div>
                     ) : (
-                      <div className="text-center p-8">
-                        <div className="text-gray-400 mb-3">
-                          {loading ? '⌛ Fetching analysis...' : '📊 AI analysis not available'}
-                        </div>
+                      <div className="text-center p-10 text-gray-400">
+                        {loading ? 'Fetching analysis...' : 'AI analysis not available'}
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Crop Specific Advice View */}
+                {/* Crop Advice View */}
                 {activeView === 'advice' && cropAdvice && (
-                  <div className="bg-white rounded-lg shadow-lg p-6">
-                    <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 rounded-t-lg mb-4">
-                      <h2 className="text-2xl font-bold mb-1">📋 Detailed Advice for {selectedCrop}</h2>
-                      <p className="text-purple-100">Step-by-step guidance from Groq AI</p>
+                  <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 overflow-hidden animate-fade-in">
+                    <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-5">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <i className="fas fa-lightbulb"></i> Advice for {selectedCrop}
+                      </h2>
+                      <p className="text-purple-100 text-sm mt-1">Step-by-step guidance from AI</p>
                     </div>
-                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4 bg-gray-50 rounded border border-gray-100">
+                    <div className="p-5 whitespace-pre-wrap text-gray-700 leading-relaxed text-sm">
                       {cropAdvice}
                     </div>
-                    <button
-                      onClick={() => setActiveView('results')}
-                      className="mt-6 bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition font-medium"
-                    >
-                      ← Back to Recommendations
-                    </button>
+                    <div className="px-5 pb-5">
+                      <button
+                        onClick={() => setActiveView('results')}
+                        className="text-gray-500 hover:text-gray-700 font-semibold text-sm transition-colors flex items-center gap-1"
+                      >
+                        <i className="fas fa-arrow-left"></i> Back to Recommendations
+                      </button>
+                    </div>
                   </div>
                 )}
 
-                {/* Soil Improvement Plan View */}
+                {/* Soil Plan View */}
                 {activeView === 'soilplan' && soilPlan && (
-                  <div className="bg-white rounded-lg shadow-lg p-6">
-                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-lg mb-4">
-                      <h2 className="text-2xl font-bold mb-1">🌱 Soil Improvement Plan</h2>
-                      <p className="text-green-100">12-month strategy to optimize your soil</p>
+                  <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 overflow-hidden animate-fade-in">
+                    <div className="bg-gradient-to-r from-teal-600 to-teal-700 p-5">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <i className="fas fa-seedling"></i> Soil Improvement Plan
+                      </h2>
+                      <p className="text-teal-100 text-sm mt-1">12-month strategy to optimize your soil</p>
                     </div>
-                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-sm p-4 bg-gray-50 rounded border border-gray-100">
+                    <div className="p-5 whitespace-pre-wrap text-gray-700 leading-relaxed text-sm">
                       {soilPlan}
                     </div>
-                    <button
-                      onClick={() => setActiveView('results')}
-                      className="mt-6 bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition font-medium"
-                    >
-                      ← Back to Recommendations
-                    </button>
+                    <div className="px-5 pb-5">
+                      <button
+                        onClick={() => setActiveView('results')}
+                        className="text-gray-500 hover:text-gray-700 font-semibold text-sm transition-colors flex items-center gap-1"
+                      >
+                        <i className="fas fa-arrow-left"></i> Back to Recommendations
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
