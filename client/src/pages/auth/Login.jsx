@@ -115,8 +115,8 @@ const Login = () => {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 p-7">
-          <h2 className="text-xl font-bold text-gray-800 text-center mb-1">
+        <div className="bg-white rounded-3xl shadow-card border border-gray-100/60 p-5 sm:p-7">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-1">
             {step === 1 ? 'Welcome Back!' : 'Verify OTP'}
           </h2>
           <p className="text-gray-400 text-sm text-center mb-6">
@@ -136,14 +136,14 @@ const Login = () => {
               <div>
                 <label className="block text-gray-600 font-semibold mb-2 text-sm">Phone Number</label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-4 text-sm font-bold text-gray-600 bg-gray-50 border-2 border-r-0 border-gray-200 rounded-l-2xl">
+                  <span className="inline-flex items-center px-2.5 sm:px-4 text-xs sm:text-sm font-bold text-gray-600 bg-gray-50 border-2 border-r-0 border-gray-200 rounded-l-2xl">
                     +91
                   </span>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    className="flex-1 px-4 py-3.5 border-2 border-gray-200 rounded-r-2xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 focus:outline-none transition-all text-center text-lg tracking-widest font-medium bg-white"
+                    className="flex-1 px-3 sm:px-4 py-3 sm:py-3.5 border-2 border-gray-200 rounded-r-2xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 focus:outline-none transition-all text-center text-base sm:text-lg tracking-normal sm:tracking-widest font-medium bg-white"
                     placeholder="98765 43210"
                     autoFocus
                     required
@@ -179,7 +179,7 @@ const Login = () => {
                   type="text"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 focus:outline-none transition-all text-center text-2xl tracking-[0.5em] font-bold bg-white"
+                  className="w-full px-4 py-3.5 sm:py-4 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-500/10 focus:outline-none transition-all text-center text-xl sm:text-2xl tracking-[0.3em] sm:tracking-[0.5em] font-bold bg-white"
                   placeholder="● ● ● ● ● ●"
                   maxLength={6}
                   autoFocus
