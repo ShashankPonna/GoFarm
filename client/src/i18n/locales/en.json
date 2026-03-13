@@ -168,7 +168,15 @@
     "policyBenefits": "Policy benefits",
     "volatilityAnalysis": "Volatility & selling window",
     "labourExchange": "Labour Exchange",
-    "postWork": "Post work requirements"
+    "postWork": "Post work requirements",
+    "yieldPrediction": "Yield Prediction",
+    "aiHarvestEstimates": "AI harvest estimates",
+    "weather": "Weather",
+    "weatherForecastAlerts": "7-day forecast & alerts",
+    "cropRecommendation": "Crop Recommendation",
+    "bestCropSuggestions": "Get best crop suggestions",
+    "findLabour": "Find Labour",
+    "postFindWorkers": "Post & find farm workers"
   },
   "orders": {
     "orderHistory": "Order History"

@@ -168,7 +168,15 @@
     "policyBenefits": "नीति लाभ",
     "volatilityAnalysis": "अस्थिरता और बिक्री विंडो",
     "labourExchange": "श्रम विनिमय",
-    "postWork": "काम की आवश्यकताएं पोस्ट करें"
+    "postWork": "काम की आवश्यकताएं पोस्ट करें",
+    "yieldPrediction": "उपज की भविष्यवाणी",
+    "aiHarvestEstimates": "AI फसल अनुमान",
+    "weather": "मौसम",
+    "weatherForecastAlerts": "7-दिन का पूर्वानुमान और अलर्ट",
+    "cropRecommendation": "फसल की सिफारिश",
+    "bestCropSuggestions": "सर्वश्रेष्ठ फसल सुझाव प्राप्त करें",
+    "findLabour": "मजदूर खोजें",
+    "postFindWorkers": "खेत मजदूरों को खोजें और पोस्ट करें"
   },
   "weather": {
     "title": "मौसम",

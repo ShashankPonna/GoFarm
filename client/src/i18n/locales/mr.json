@@ -168,7 +168,15 @@
     "policyBenefits": "धोरण फायदे",
     "volatilityAnalysis": "अस्थिरता आणि विक्री विंडो",
     "labourExchange": "मजूर देवाणघेवाण",
-    "postWork": "काम आवश्यकता पोस्ट करा"
+    "postWork": "काम आवश्यकता पोस्ट करा",
+    "yieldPrediction": "उत्पन्नाचा अंदाज",
+    "aiHarvestEstimates": "AI पीक अंदाज",
+    "weather": "हवामान",
+    "weatherForecastAlerts": "7-दिवसांचा अंदाज आणि अलर्ट",
+    "cropRecommendation": "पीक शिफारस",
+    "bestCropSuggestions": "सर्वोत्तम पीक सूचना मिळवा",
+    "findLabour": "मजूर शोधा",
+    "postFindWorkers": "शेतमजूर शोधा आणि पोस्ट करा"
   },
   "weather": {
     "title": "हवामान",
