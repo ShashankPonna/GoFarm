@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && CI=false npm run build",
+  "buildCommand": "export CI=false && export TREAT_WARNINGS_AS_ERRORS=false && cd client && npm install && npm run build",
   "outputDirectory": "client/build",
   "rewrites": [
     {
